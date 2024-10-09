@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block body_class %}login-page{% endblock %}
+{% load static %}
+{% block header %}{% endblock %}
+{% block spacing %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="flex flex-col md:flex-row bg-white h-screen items-center justify-center">
+  <!-- Formulario de inicio de sesión -->
+  <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12">
+    <div class="w-full max-w-md">
+      <div class="flex justify-center mb-8 items-center">
+        <img src="{% static 'img/INCUBADORA.png' %}" class="w-50 h-20 text-indigo-600" alt="Logo" />
+      </div>
+      <h2 class="text-3xl font-bold text-navy-blue mb-6">Bienvenido</h2>
+      <p class="mb-6 text-black ">
+        ¿Listo para emprender? 
+        <a href="{% url 'register' %}" class="text-navy-blue hover:underline cursor-pointer">
+            <span>
+            Regístrate en Incuval Ventures
+            </span>
+        </a>
+      </p>
+      
+      {% if form.non_field_errors %}
+      <div class="relative flex items-center rounded px-4 py-2 text-white text-sm bg-red">
+          <p class="mr-2">{{ form.non_field_errors.0 }}</p>
+          <button
+           class="ml-auto text-black hover:text-gray-200 focus:outline-none"
+           type="button"
+           onclick="this.parentElement.remove()">
+           <i class="fa-sharp fa-solid fa-xmark" style="color: #000000;"></i>
+          </button>
+      </div>
+      {% endif %}
+
+      <form method="post" class="mt-8 mb-2 w-full text-center">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-navy-blue mb-2">
+              Correo electrónico
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="username"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md text-navy-blue"
+                placeholder="correo@example.com"
+                autocomplete="email"
+                required
+              />
+        </div>
+        <div class="mb-6">
+          <label for="password" class="block text-sm font-medium text-navy-blue mb-2">
+            Contraseña
+          </label>
+          <div class="relative">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-navy-blue"
+              placeholder="***************"
+              autocomplete="current-password"
+              required
+            />
+            <button
+                  type="button"
+                  id="togglePassword"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                  style="background: none; border: none; cursor: pointer;"
+              >
+                  <i class="fa-light fa-eye-slash" id="toggleIcon"></i>
+              </button>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+              <input
+                  id="remember-me"
+                  name="remember_me" 
+                  type="checkbox"
+                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  {% if form.remember_me.value %} checked {% endif %} 
+              />
+              <label for="remember-me" class="ml-2 block text-sm text-black">
+                  Recordarme
+              </label>
+          </div>
+          <div class="text-sm">
+            <a href="{% url 'password-reset' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+        </div>
+        <button
+          type="submit"
+          class="w-full bg-navy-blue text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Iniciar sesión
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Imagen de fondo -->
+  <div class="hidden md:block w-1/2 bg-gray-200 h-full">
+    <img class="object-cover w-full h-full" src="{% static 'img/cover-incuval.png' %}" alt="Incuval" />
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+    const toggleIcon = document.querySelector('#toggleIcon');
+
+    togglePassword.addEventListener('click', function() {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      
+      if (type === 'password') {
+        toggleIcon.className = 'fa-light fa-eye-slash';
+      } else {
+        toggleIcon.className = 'fa-sharp fa-light fa-eye';
+      }
+    });
+  });
+</script>
+{% endblock content %}

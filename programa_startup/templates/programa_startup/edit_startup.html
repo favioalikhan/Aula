@@ -1,0 +1,705 @@
+{% extends "base.html" %}
+{% load static %}
+{% load wagtailcore_tags wagtailimages_tags %}
+{% block content %}
+{% block footer %}{% endblock %}
+<div class="flex justify-center items-center h-16 bg-navy-blue">
+    <h1 class="text-2xl font-bold text-center text-white">Editando Perfil de Startup {{ startup.nombre }}</h1>
+</div>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div class="container mx-auto mt-8">
+    <div class="container mx-auto p-4">
+        <div class="bg-white p-6 rounded-lg shadow-md grid gap-6 items-center {% if user.rol == user.EMPRENDEDOR %}md:grid-cols-3{% else %}md:grid-cols-2{% endif %}">
+                <div class="flex flex-col items-center">
+                        <div class="relative group">
+                            <div class="relative">
+                                {{ startup_form.logo }}
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-semibold text-black mt-5 text-center">Nombre de la startup <i class="fa-solid fa-pen-to-square"></i></h1>
+                            <h1 class="text-xl font-semibold text-black mt-5 text-center">{{ startup_form.nombre }}</h1>
+                        </div>
+                </div>
+                    <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+                        <h2 class="text-lg font-semibold mb-4">Descripción <i class="fa-solid fa-pen-to-square"></i></h2>
+                        {{ startup_form.descripcion }}
+                    </div>
+                    <div class="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md">
+                        <h2 class="text-lg font-semibold mb-4">Progreso</h2>
+                        {% if startup.programa%}
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold">{{ startup.programa}}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ progreso }}%"></div>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>0</span>
+                                    <span class="font-bold">{{ progreso }}%</span>
+                                    <span>100</span>
+                                </div>
+                            </div>
+                        {% else %}
+                        <span class="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold">No estás inscrito en un programa</span>
+                        {% endif %}
+                    </div>
+        </div>
+
+            <div class="bg-white shadow rounded-lg overflow-hidden mt-8">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold mb-4">Datos de la Startup</h2>
+                    <div class="border-b border-gray-200">
+                        <nav class="flex -mb-px">
+                            <a href="#modelo" class="tab-link border-b-2 border-blue-500 text-blue-600 px-4 py-2 text-sm font-medium" data-tab="modelo">Modelo de Negocio</a>
+                            <a href="#integrantes" class="tab-link text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium" data-tab="integrantes">Integrantes</a>
+                            <a href="#mentoria" class="tab-link  text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium"  data-tab="mentoria">Mentoría</a>
+                            <a href="#logros" class="tab-link  text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium" data-tab="logros">Logros</a>
+                        </nav>
+                    </div>
+                    <div id="modelo" class="tab-content mt-6 space-y-4">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Problemática <i class="fa-solid fa-pen-to-square"></i></h3>
+                                {{ startup_form.problematica }}
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Propuesta de Valor <i class="fa-solid fa-pen-to-square"></i></h3>
+                                {{ startup_form.propuesta_valor }}
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Público Objetivo <i class="fa-solid fa-pen-to-square"></i></h3>
+                                {{ startup_form.publico_objetivo }}
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Socios Clave <i class="fa-solid fa-pen-to-square"></i></h3>
+                                {{ startup_form.socios_clave }}
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Canales <i class="fa-solid fa-pen-to-square"></i></h3>
+                                {{ startup_form.canales }}
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Producto o Servicio <i class="fa-solid fa-pen-to-square"></i></h3>
+                                {{ startup_form.producto_servicio }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="integrantes" class="tab-content mt-6 space-y-4 hidden">
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <!-- Sección de búsqueda y agregado de nuevos integrantes -->
+                                <div>
+                                    <label class="block text-navy-blue font-semibold mb-2">Agregar nuevo integrante</label>
+                                    <div class="relative flex items-center space-x-2">
+                                        <input
+                                            id="search-integrante"
+                                            type="text"
+                                            placeholder="Buscar integrante..."
+                                            class="flex-1 p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                                        />
+                                        <button
+                                            type="button"
+                                            id="buscar-btn"
+                                            class="bg-white text-gray-600 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        >
+                                            Buscar Integrante
+                                        </button>
+                                    </div>
+                                    <div id="resultados-busqueda" class="mt-4 space-y-2">
+                                        <!-- Resultados de búsqueda se insertan aquí -->
+                                    </div>
+                                </div>
+                    
+                                <!-- Lista de integrantes actuales -->
+                                <h4 class="text-lg font-semibold">Integrantes actuales:</h4>
+                                {% if integrantes %}
+                                    <div class="space-y-4">
+                                        {% for integrante in integrantes %}
+                                            <div class="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                                                <span>
+                                                    {{ integrante.usuario.username }} -
+                                                    {% if startup.fundador != integrante.usuario %}
+                                                        <label for="cargo_{{ integrante.pk }}">Cargo:</label>
+                                                        <input type="text" id="cargo_{{ integrante.pk }}" name="cargo_{{ integrante.pk }}" value="{{ integrante.cargo }}" class="bg-white p-2 border border-gray-300 rounded-md">
+                                                    {% else %}
+                                                        <input type="text" value="{{ integrante.cargo }}" disabled class="bg-gray-100 p-2 border border-gray-300 rounded-md">
+                                                        <input type="hidden" name="cargo_{{ integrante.pk }}" value="{{ integrante.cargo }}">
+                                                    {% endif %}
+                                                </span>
+                                                {% if startup.fundador != integrante.usuario %}
+                                                    <button type="button" 
+                                                            class="eliminar-integrante bg-red text-white px-3 py-1 rounded-md hover:bg-red-700" 
+                                                            data-integrante-id="{{ integrante.pk }}">
+                                                        Eliminar
+                                                    </button>
+                                                {% else %}
+                                                    <button class="bg-navy-blue text-white px-3 py-1 rounded-md cursor-not-allowed" disabled>
+                                                        No se puede eliminar
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p>No hay integrantes en esta startup.</p>
+                                {% endif %}
+                    
+                                <!-- Lista de nuevos integrantes -->
+                                <h4 class="text-lg font-semibold mt-4">Nuevos integrantes a agregar:</h4>
+                                <ul id="integrantes-lista" class="space-y-2">
+                                    <!-- Nuevos integrantes se insertan aquí dinámicamente -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para ingresar cargo -->
+                    <div id="cargoModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden text-center">
+                        <div class="bg-white p-6 rounded-md shadow-lg">
+                            <h2 class="text-lg font-semibold mb-4">Escribe el cargo para este integrante</h2>
+                            <input
+                                id="cargo-input"
+                                type="text"
+                                placeholder="Cargo"
+                                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                            />
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button
+                                    id="cancel-btn"
+                                    type="button"
+                                    class="bg-red text-white px-4 py-2 rounded-md hover:bg-red-600"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    id="save-cargo-btn"
+                                    type="button"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                                >
+                                    Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+            <div id="mentoria" class="tab-content mt-6 space-y-4 hidden">
+                <div class="p-6">
+                    {% if startup.mentoria_set.exists %}
+                        <div class="space-y-4">
+                            {% for mentoria in startup.mentoria_set.all %}
+                                {% if mentoria.estado != 'COMPLETADA' %}
+                                    <div id="mentoria-{{ mentoria.pk }}" class="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                                        <input type="hidden" name="mentoria_id" value="{{ mentoria.pk }}">
+                                        <div>
+                                            <p>Mentor: {{ mentoria.mentor.user.username }}</p>
+                                            <p class="text-sm text-gray-600">Especialidad: {{ mentoria.mentor.especialidad|default:"Sin especialidad" }}</p>
+                                            <a href="{{ mentoria.mentor.sala_virtual }}" 
+                                                class="block w-80 p-2 text-blue-500 underline bg-blue-50 rounded hover:bg-blue-100 truncate">
+                                                    {{ mentoria.mentor.sala_virtual }}
+                                            </a>
+                                        </div>
+                                        <div>
+                                            <label for="temas_{{ mentoria.id }}" class="block text-sm font-medium text-gray-700">Temas:</label>
+                                            <input type="text" id="temas_{{ mentoria.id }}" name="mentoria_temas_{{ mentoria.id }}" value="{{ mentoria.temas }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        </div>
+                                        
+                                        <div class="mt-2">
+                                            <label for="fecha_{{ mentoria.id }}" class="block text-sm font-medium text-gray-700">Fecha:</label>
+                                            <input type="datetime-local" id="fecha_{{ mentoria.id }}" name="mentoria_fecha_{{ mentoria.id }}" value="{{ mentoria.fecha|date:'Y-m-d\\TH:i' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        </div>
+                                        
+                                        <div>
+                                            <button type="button" 
+                                                    class="cancelar-mentoria bg-red hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                                    data-mentoria-id="{{ mentoria.pk }}">
+                                                Cancelar Mentoría
+                                            </button>
+                                        </div>
+                                    </div>
+                                {%endif%}
+                                <p>No tienes ninguna mentoría asociada.</p>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p id="no-mentorias">No hay mentorías asociadas a esta startup.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="logros" class="tab-content mt-6 space-y-4 hidden">
+                <div class="p-6">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="logros-lista">
+                    {% if startup.logros.exists %}
+                            {% for logro in startup.logros.all %}
+                                <div class="p-4 bg-gray-100 rounded-lg shadow-md logro-item" data-logro-id="{{ logro.id }}">
+                                    <input type="hidden" name="logro_ids" value="{{ logro.id }}">
+                                    <div>
+                                        <label for="titulo_{{ logro.id }}" class="block text-sm font-medium text-gray-700">Título:</label>
+                                        <input type="text" id="titulo_{{ logro.id }}" name="logro_titulo_{{ logro.id }}" value="{{ logro.titulo }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    </div>
+                                    <div class="mt-2">
+                                        <label for="descripcion_{{ logro.id }}" class="block text-sm font-medium text-gray-700">Descripción:</label>
+                                        <textarea id="descripcion_{{ logro.id }}" name="logro_descripcion_{{ logro.id }}" rows="7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ logro.descripcion }}</textarea>
+                                    </div>
+                                    <div class="mt-2">
+                                        <label for="fecha_logro_{{ logro.id }}" class="block text-sm font-medium text-gray-700">Fecha:</label>
+                                        <input type="date" id="fecha_logro_{{ logro.id }}" name="logro_fecha_logro_{{ logro.id }}" value="{{ logro.fecha_logro|date:'Y-m-d' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    </div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <label for="eliminar_{{ logro.id }}" class="inline-flex items-center hidden">
+                                            <input type="checkbox" id="eliminar_{{ logro.id }}" name="eliminar_logro_{{ logro.id }}" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                            <span class="ml-2 text-sm text-gray-600">Eliminar este logro</span>
+                                        </label>
+                                        <button type="button" class="eliminar-logro-btn bg-red text-white px-2 py-1 rounded">Eliminar Logro</button>
+                                    </div>
+                                </div>
+                        {% endfor %}
+                    {% endif %}
+                        <p class="text-gray-600 {% if startup.logros.exists %} hidden {% endif %}" id="no-logros-msg">No hay logros asociados a esta startup.</p>
+                  </div>
+                </div>
+                <div class="mt-4 flex justify-center">
+                    <button type="button" id="abrir-modal-logro" class="bg-navy-blue text-white px-4 py-2 rounded-md hover:bg-blue-700">Agregar nuevo logro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-nuevo-logro" class="fixed inset-0 backdrop-blur-md bg-opacity-50 pt-10 overflow-y-auto h-full w-full hidden z-30">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Agregar nuevo logro</h3>
+                <div class="mt-2 px-7 py-3">
+                    <div class="mb-4">
+                        <label for="{{ logro_form.titulo.id_for_label }}" class="block text-sm font-medium text-gray-700">Título:</label>
+                        {{logro_form.titulo}}
+                    </div>
+                    <div class="mb-4">
+                        <label for="{{ logro_form.descripcion.id_for_label }}" class="block text-sm font-medium text-gray-700">Descripción:</label>
+                        {{logro_form.descripcion}}
+                    </div>
+                    <div class="mb-4">
+                        <label for="{{ logro_form.fecha_logro.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha:</label>
+                        {{logro_form.fecha_logro}}
+                    </div>
+                </div>
+                <div class="flex justify-between items-center px-4 py-3">
+                    <button id="agregar-logro" type="button" class="px-4 py-2 bg-navy-blue text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        Agregar
+                    </button>
+                    <button id="cerrar-modal-logro" type="button" class="px-4 py-2 bg-red text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+            <div class="grid gap-6 md:grid-cols-3">
+                <div class="bg-white shadow rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                        </svg>
+                        Hitos completados
+                    </h3>
+                    <div class="flex items-center justify-center">
+                        <div class="relative w-24 h-24">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle class="text-gray-200" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                                <circle class="text-blue-600" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" stroke-dasharray="283" stroke-dashoffset="{{ hitos_count}}" />
+                            </svg>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <p class="text-3xl font-bold">{{hitos_count}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white shadow rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Seguidores
+                    </h3>
+                    <p class="flex justify-center items-center text-center text-4xl font-bold h-full w-full">{{ startup.seguidores_startup.count }}</p>
+                </div>
+                <div class="bg-white shadow rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Programa actual
+                    </h3>
+                    <div class="flex justify-center items-center h-24">
+                        {% if startup.programa.imagen %}
+                        {% image startup.programa.imagen original %}
+                    {% else %}
+                        <p>No está inscrito a ningún programa.</p>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-center space-x-4">
+                <button type="submit" class="bg-green text-white py-2 px-6 rounded-lg items-center justify-center">
+                    Actualizar datos <i class="fa-solid fa-save ml-2"></i>
+                </button>
+                <button class="bg-red text-white py-2 px-6 rounded-lg flex items-center justify-center">Cancelar <i class="fa-solid fa-xmark ml-2" style="color: #ffffff;"></i></button>
+            </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</form>
+<!-- Incluye el JavaScript para manejar las pestañas -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Función para manejar el cambio de pestañas
+        function switchTab(tabId) {
+            // Ocultar todos los contenidos de las pestañas
+            tabContents.forEach(content => content.classList.add('hidden'));
+
+            // Mostrar el contenido de la pestaña seleccionada
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        // Inicializar la pestaña activa
+        const defaultTab = 'modelo'; // Cambia esto si quieres que otra pestaña esté activa por defecto
+        switchTab(defaultTab);
+
+        // Manejar clics en las pestañas
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Obtener el ID de la pestaña a mostrar
+                const tabId = this.getAttribute('data-tab');
+
+                // Cambiar la pestaña
+                switchTab(tabId);
+
+                // Actualizar los estilos de los enlaces de las pestañas
+                tabLinks.forEach(l => {
+                    l.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                    l.classList.add('text-gray-500', 'hover:text-gray-700');
+                });
+                this.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                this.classList.remove('text-gray-500', 'hover:text-gray-700');
+            });
+        });
+
+        // Código para manejar la búsqueda y adición de nuevos integrantes
+        const buscarBtn = document.getElementById('buscar-btn');
+        const searchInput = document.getElementById('search-integrante');
+        const resultadosDiv = document.getElementById('resultados-busqueda');
+        const integrantesLista = document.getElementById('integrantes-lista');
+        const cargoModal = document.getElementById('cargoModal');
+        const cargoInput = document.getElementById('cargo-input');
+        const saveCargoBtn = document.getElementById('save-cargo-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+
+        buscarBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            const query = searchInput.value.trim();
+        
+            if (query === '') {
+                alert('Por favor, ingresa un nombre para buscar.');
+                return;
+            }
+        
+            fetch(`/buscar-integrante/?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultadosDiv.innerHTML = '';  // Limpiar resultados anteriores
+        
+                    if (data.results.length === 0) {
+                        resultadosDiv.style.display = 'none';
+                        resultadosDiv.innerHTML = '<p class="text-gray-600">No se encontraron integrantes.</p>';
+                    } else {
+                        resultadosDiv.style.display = 'block';
+                        data.results.forEach(function(integrante) {
+                            const integranteDiv = document.createElement('div');
+                            integranteDiv.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'border', 'border-gray-300', 'rounded-md', 'mb-2');
+                            
+                            const nombreSpan = document.createElement('span');
+                            nombreSpan.textContent = integrante.nombre;
+                            nombreSpan.classList.add('flex-1');
+                            
+                            const agregarBtn = document.createElement('button');
+                            agregarBtn.textContent = 'Agregar';
+                            agregarBtn.type = 'button';
+                            agregarBtn.classList.add('bg-blue-600', 'text-white', 'px-3', 'py-1', 'rounded-md', 'hover:bg-blue-700', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2', 'focus:ring-blue-500');
+                            agregarBtn.addEventListener('click', function(event) {
+                                event.preventDefault();
+                                showCargoModal(integrante.id, integrante.nombre);
+                            });
+        
+                            integranteDiv.appendChild(nombreSpan);
+                            integranteDiv.appendChild(agregarBtn);
+                            resultadosDiv.appendChild(integranteDiv);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al buscar integrantes:', error);
+                    alert('Ocurrió un error al buscar el integrante. Por favor, inténtelo de nuevo.');
+                });
+        });
+
+        function showCargoModal(id, nombre) {
+            cargoModal.classList.remove('hidden');
+            cargoInput.value = '';
+        
+            saveCargoBtn.onclick = function() {
+                const cargo = cargoInput.value.trim();
+                if (!cargo) {
+                    alert('El cargo no puede estar vacío.');
+                    return;
+                }
+                agregarIntegrante(id, nombre, cargo);
+                cargoModal.classList.add('hidden');
+            };
+        
+            cancelBtn.onclick = function() {
+                cargoModal.classList.add('hidden');
+            };
+        }
+        
+        function agregarIntegrante(id, nombre, cargo) {
+            // Verificar si el integrante ya está en la lista
+            const integrantesItems = integrantesLista.querySelectorAll('li');
+            for (let item of integrantesItems) {
+                if (item.dataset.id === id) {
+                    alert('Este integrante ya está en la lista.');
+                    return;
+                }
+            }
+            
+            const integranteItem = document.createElement('li');
+            integranteItem.textContent = `${nombre} - Cargo: ${cargo}`;
+            integranteItem.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'border', 'border-gray-300', 'rounded-md', 'mb-2');
+            integranteItem.dataset.id = id;
+            
+            const integranteInput = document.createElement('input');
+            integranteInput.type = 'hidden';
+            integranteInput.name = 'integrantes';
+            integranteInput.value = `${id}:${cargo}`;
+            
+            integranteItem.appendChild(integranteInput);
+            
+            const eliminarBtn = document.createElement('button');
+            eliminarBtn.textContent = 'Eliminar';
+            eliminarBtn.type = 'button';
+            eliminarBtn.classList.add('bg-red', 'text-white', 'px-3', 'py-1', 'rounded-md', 'hover:bg-red-700', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2', 'focus:ring-red-500');
+            eliminarBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                integranteItem.remove();
+            });
+        
+            integranteItem.appendChild(eliminarBtn);
+            integrantesLista.appendChild(integranteItem);
+            
+            // Limpiar y ocultar el div de resultados después de agregar el integrante
+            resultadosDiv.innerHTML = '';
+            resultadosDiv.style.display = 'none';
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        function eliminarIntegrante(integranteId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este integrante?')) {
+                fetch(`/eliminar-integrante/${integranteId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Eliminar el elemento del DOM
+                        const integranteElement = document.querySelector(`[data-integrante-id="${integranteId}"]`).closest('.flex');
+                        integranteElement.remove();
+                    } else {
+                        throw new Error('Error al eliminar el integrante');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ocurrió un error al eliminar el integrante. Por favor, inténtelo de nuevo.');
+                });
+            }
+        }
+
+        document.querySelectorAll('.cancelar-mentoria').forEach(button => {
+            button.addEventListener('click', function() {
+                const mentoriaId = this.getAttribute('data-mentoria-id');
+                if (confirm('¿Estás seguro de que quieres cancelar esta mentoría?')) {
+                    fetch(`/cancelar-mentoria/${mentoriaId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Intentar eliminar la mentoría de la interfaz
+                            const mentoriaElement = document.getElementById(`mentoria-${mentoriaId}`);
+                            if (mentoriaElement) {
+                                mentoriaElement.remove();
+                            } else {
+                                console.warn(`Elemento con ID mentoria-${mentoriaId} no encontrado`);
+                            }
+    
+                            // Verificar si no quedan más mentorías
+                            const mentoriasContainer = document.querySelector('#mentoria .space-y-4');
+                            if (mentoriasContainer && !mentoriasContainer.querySelector('.flex')) {
+                                mentoriasContainer.innerHTML = '<p id="no-mentorias">No hay mentorías asociadas a esta startup.</p>';
+                            }
+    
+                            // Si el botón aún existe, eliminarlo
+                            this.remove();
+                        } else {
+                            alert('Error al cancelar la mentoría: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al cancelar la mentoría.');
+                    });
+                }
+            });
+        });
+    
+    
+        // Función para obtener el valor de una cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    
+        // Agregar event listeners a los botones de eliminar
+        document.querySelectorAll('.eliminar-integrante').forEach(button => {
+            button.addEventListener('click', function() {
+                const integranteId = this.getAttribute('data-integrante-id');
+                eliminarIntegrante(integranteId);
+            });
+        });
+
+        const abrirModalLogro = document.getElementById('abrir-modal-logro');
+        const modalNuevoLogro = document.getElementById('modal-nuevo-logro');
+        const cerrarModalLogro = document.getElementById('cerrar-modal-logro');
+        const agregarLogro = document.getElementById('agregar-logro');
+        const logrosLista = document.getElementById('logros-lista');
+        const noLogrosMsg = document.getElementById('no-logros-msg'); 
+        
+
+        if (abrirModalLogro && modalNuevoLogro && cerrarModalLogro && agregarLogro) {
+            abrirModalLogro.addEventListener('click', function() {
+                modalNuevoLogro.classList.remove('hidden');
+            });
+
+            cerrarModalLogro.addEventListener('click', function() {
+                modalNuevoLogro.classList.add('hidden');
+            });
+
+            agregarLogro.addEventListener('click', function() {
+                // Aquí puedes agregar la lógica para enviar el formulario
+                const titulo = document.getElementById('{{ logro_form.titulo.id_for_label }}').value;
+                const descripcion = document.getElementById('{{ logro_form.descripcion.id_for_label }}').value;
+                const fecha = document.getElementById('{{ logro_form.fecha_logro.id_for_label }}').value;
+
+                if (!titulo || !descripcion || !fecha) {
+                    alert('Por favor, completa todos los campos del logro.');
+                    return;
+                }
+
+                const nuevoLogro = document.createElement('div');
+                nuevoLogro.classList.add('p-4', 'bg-gray-100', 'rounded-lg', 'shadow-md');
+                nuevoLogro.dataset.logroId = "temp_id";
+                nuevoLogro.innerHTML = `
+                <div class="logro-item">
+                    <input type="hidden" name="nuevo_logro_ids" value="temp_id"> <!-- Aquí podrías usar un contador -->
+                    <div>
+                        <label for="nuevo_titulo" class="block text-sm font-medium text-gray-700">Título:</label>
+                        <input type="text" id="nuevo_titulo" name="nuevo_titulo" value="${titulo}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="mt-2">
+                        <label for="nueva_descripcion" class="block text-sm font-medium text-gray-700">Descripción:</label>
+                        <textarea id="nueva_descripcion" name="nueva_descripcion" rows="7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">${descripcion}</textarea>
+                    </div>
+                    <div class="mt-2">
+                        <label for="nueva_fecha_logro" class="block text-sm font-medium text-gray-700">Fecha:</label>
+                        <input type="date" id="nueva_fecha_logro" name="nueva_fecha_logro" value="${fecha}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="mt-2">
+                        <label class="hidden inline-flex items-center">
+                            <input type="checkbox" name="eliminar_logro_temp_id" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <span class="eliminar-logro ml-2 text-sm text-gray-600">Eliminar este logro</span>
+                        </label>
+                        <button type="button" class="eliminar-logro-btn bg-red text-white px-2 py-1 rounded">Eliminar Logro</button>
+                    </div>
+                </div>
+                `;
+
+                // Agregar el nuevo logro a la lista
+                logrosLista.appendChild(nuevoLogro);
+
+                
+                // Opcional: Limpiar los campos del formulario
+                 document.getElementById('{{ logro_form.titulo.id_for_label }}').value = '';
+                 document.getElementById('{{ logro_form.descripcion.id_for_label }}').value = '';
+                 document.getElementById('{{ logro_form.fecha_logro.id_for_label }}').value = '';
+                 modalNuevoLogro.classList.add('hidden');
+                
+                 // Agregar evento para eliminar el logro
+                 nuevoLogro.querySelector('.eliminar-logro-btn').addEventListener('click', function() {
+                    nuevoLogro.remove();
+                });
+
+                if (logrosLista.children.length > 1) {
+                    noLogrosMsg.classList.add('hidden');
+                }
+            });
+
+            logrosLista.addEventListener('click', function(e) {
+                if (e.target.classList.contains('eliminar-logro-btn')) {
+                    const logroItem = e.target.closest('.logro-item');
+                    const checkbox = logroItem.querySelector('input[type="checkbox"][name^="eliminar_logro_"]');
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        logroItem.style.opacity = 0.5; // Opcional: Indicar visualmente que está marcado para eliminación
+                    }
+                }
+            });
+
+            // Cerrar el modal si se hace clic fuera de él
+            window.addEventListener('click', function(event) {
+                if (event.target === modalNuevoLogro) {
+                    modalNuevoLogro.classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>
+{% endblock content %}

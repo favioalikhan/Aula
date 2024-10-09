@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+{% load static %}
+
+{% block body_class %}template-evento{% endblock %}
+{% block content %}
+
+<div class="container mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-8">Próximos eventos</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for event in events %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="h-48 items-center flex justify-center">{% image event.imagen width-350 height-125%}</div>
+            <div class="p-6 text-center">
+                <h2 class="text-xl font-semibold mb-2">{{ event.titulo }}</h2>
+                <div class="flex justify-center items-center mb-2">
+                    <i class="fa-duotone fa-solid fa-calendar"></i>
+                    <span class="text-gray-600 p-2">{{ event.fecha|date:"F j, Y" }}</span>
+                </div>
+                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-green text-navy-blue">{{ event.tipo }}</span>
+                <p class="text-gray-700 mt-2">{{ event.descripcion }}</p>
+                {% if event.bloqueado %}
+                    <p class="mt-4 inline-block w-full px-4 py-2 rounded bg-red text-white">Este evento ya ha finalizado.</p>
+                {% else %}
+                    <a href="{{ event.url_externa }}" target="_blank" rel="noopener noreferrer" 
+                       class="mt-4 inline-block w-full px-4 py-2 bg-navy-blue text-white text-center rounded 
+                              hover:bg-blue-600 transition duration-300 ease-in-out">
+                              Registrarse en evento
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock content %}

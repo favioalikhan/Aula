@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% load static %}
+{% block header %}{% endblock %}
+{% block spacing %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+
+<div class="flex flex-col md:flex-row h-screen bg-white justify-center">
+  <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 text-center">
+    <div class="max-w-md mx-auto">
+      <h2 class="text-3xl font-bold mb-6 text-navy-blue">
+        <span id="roleTitle">Conviértete en emprendedor</span>
+      </h2>
+      <form method="post" class="w-full h-full text-center">
+        {% csrf_token %}
+        <input type="hidden" id="rol" name="rol" value="">
+        {% if form.errors %}
+        <div class="bg-red border-l-4 border-red text-white  p-4 mb-4" role="alert">
+          <strong class="font-bold">Por favor, corrige los siguientes errores:</strong>
+          <ul class="mt-2 text-sm">
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="email" class="block text-sm font-medium text-navy-blue mb-2">Correo electrónico</label>
+            {{ form.email }}
+          </div>
+          <div>
+            <label for="userName" class="block text-sm font-medium text-navy-blue mb-2">Nombres</label>
+            {{ form.username }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="paternalLastName" class="block text-sm font-medium text-navy-blue mb-2">Apellido Paterno</label>
+              {{ form.apellido_paterno }}
+          </div>
+          <div>
+            <label for="maternalLastName" class="block text-sm font-medium text-navy-blue mb-2">Apellido Materno</label>
+            {{ form.apellido_materno }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="relative">
+            <label for="password1" class="block text-sm font-medium text-navy-blue mb-2">Contraseña</label>
+            {{ form.password1 }}
+            <button
+              type="button"
+              id="togglePassword1"
+              class="absolute inset-y-0 right-0 mt-2 pr-3 flex items-center text-sm leading-5 p"
+              style="background: none; border: none; cursor: pointer;"
+            >
+              <i class="fa-light fa-eye-slash" id="toggleIcon1"></i>
+            </button>
+          </div>
+          <div class="relative">
+            <label for="password2" class="block text-sm font-medium text-navy-blue mb-2">Confirmar contraseña</label>
+            {{ form.password2 }}
+            <button
+              type="button"
+              id="togglePassword2"
+              class="absolute inset-y-0 right-0 mt-2 pr-3 flex items-center text-sm leading-5"
+              style="background: none; border: none; cursor: pointer;"
+            >
+              <i class="fa-light fa-eye-slash" id="toggleIcon2"></i>
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="gender" class="block text-sm font-medium text-navy-blue mb-2">Género</label>
+            {{ form.genero }}
+          </div>
+          <div>
+            <label for="dateOfBirth" class="block text-sm font-medium text-navy-blue mb-2">Fecha de nacimiento</label>
+            {{ form.fecha_nacimiento }}
+          </div>
+        </div>
+        <div class="mt-6 mb-4">
+          <div class="inline-flex items-center">
+              <label class="relative -ml-2.5 flex cursor-pointer items-center rounded-full p-3" htmlFor="remember">
+                <input type="checkbox"
+                  class="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-gray-900 checked:bg-blue checked:before:bg-blue hover:before:opacity-10"
+                  id="remember" 
+                  required
+                  />
+                <span
+                  class="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"
+                    stroke="currentColor" stroke-width="1">
+                    <path fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </span>
+              </label>
+              <label class="text-sm font-roboto text-gray-700 cursor-pointer select-none mt-1 mr-2 " htmlFor="remember"> 
+                <p class="text-md text-navy-blue">
+                  Al registrarse, está creando una cuenta en la plataforma y acepta los<a href="#" class="font-medium transition-colors hover:text-navy-blue">
+                    &nbsp;Términos y Condiciones
+                  </a>
+                </p>
+              </label>
+            </div>
+        </div>
+        <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+            Registrarse
+        </button>
+          <!-- Modal para selección de rol -->
+          <div id="roleModal" class="fixed inset-0 backdrop-blur-md bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-8 rounded-lg shadow-xl">
+              <h2 class="text-2xl font-bold mb-6 text-center text-navy-blue">Registrarse como</h2>
+              <div class="flex flex-col space-y-4">
+                {% for value, label in form.rol.field.choices %}
+                    <button type="button" data-role="{{ value }}" class="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300" onclick="selectRole('{{ value }}')">
+                        {{ label }}
+                    </button>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+      </form>
+    </div>
+  </div>
+  <div class="hidden md:block md:w-1/2 bg-gray-200">
+    <img class="object-cover w-full h-full" src="{% static 'img/cover-incuval.png' %}" alt="Incuval">
+  </div>
+</div>
+
+<!-- Modal para registro exitoso -->
+<!-- Modal para registro exitoso -->
+<div id="successModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+  <div class="flex items-center justify-center min-h-screen px-4 py-6">
+    <div class="fixed inset-0 transition-opacity">
+      <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+    </div>
+    <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full p-6">
+      <div class="sm:flex sm:items-start">
+        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green sm:mx-0 sm:h-10 sm:w-10">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+          <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+            ¡Registro Exitoso!
+          </h3>
+          <div class="mt-2">
+            <p class="text-sm text-gray-500">
+              Tu registro ha sido exitoso. ¡Bienvenido a la plataforma!
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 sm:mt-6 sm:flex sm:flex-row-reverse">
+        <button onclick="window.location.href='{% url 'login' %}'" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-600 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+          Iniciar Sesión
+        </button>
+        <button type="button" onclick="closeSuccessModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/modales.js' %}"></script>
+
+  {% endblock content %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{%load static%}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Ruta del Emprendedor</h1>
+    
+    <div class="mb-8">
+        <img 
+            src="{% static 'img/RUTA.png' %}" 
+            alt="Imagen de la Ruta del Emprendedor" 
+            class="w-full h-auto object-cover rounded-lg shadow-md"
+        >
+    </div>
+
+    <div class="text-navy-blue p-6 rounded-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Campo del nombre de la startup -->
+            <div class="space-y-2">
+                <label for="startupName" class="block text-sm font-medium">
+                    Nombre de la startup:
+                </label>
+                <input
+                    type="text"
+                    id="startupName"
+                    value="{{ startup.nombre }}"
+                    class="w-full px-3 py-2 bg-bg-gray-300 border border-blue-600 rounded-md focus:outline-none text-navy-blue"
+                    readonly
+                >
+            </div>
+            
+            <!-- Campo del nombre del programa -->
+            <div class="space-y-2">
+                <label for="programaName" class="block text-sm font-medium">
+                    Programa:
+                </label>
+                <input
+                    type="text"
+                    id="programaName"
+                    value="{{ programa.titulo }}"
+                    class="w-full px-3 py-2 bg-bg-gray-300 border border-blue-600 rounded-md focus:outline-none text-navy-blue"
+                    readonly
+                >
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-lg mx-auto p-4">
+    <div class="bg-white shadow-md rounded-lg">
+        <div class="flex items-center p-4 border-b border-gray-200">
+            <a href="{% url 'ver-entregables' entregable.tarea.pk %}" class="text-gray-500 hover:text-gray-700">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-2xl font-semibold ml-4">Calificar Entregable</h1>
+        </div>
+
+        <div class="p-4">
+            <h3 class="text-lg font-semibold mb-2">Tarea: {{ entregable.tarea.titulo }}</h3>
+            <h4 class="text-md mb-4">Startup: {{ entregable.startup.nombre }}</h4>
+            <p class="text-gray-700 mb-4">Subido por: {{ entregable.subido_por.username }} el {{ entregable.fecha_subida }}</p>
+
+            <form action="" method="post" class="space-y-4">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Guardar Calificación
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

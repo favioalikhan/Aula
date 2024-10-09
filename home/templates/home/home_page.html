@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+{% load static %}
+{% block body_class %}template-homepage{% endblock %}
+
+{% block content %}
+
+<div class="container pt-10 mx-auto px-4">
+    {% if request.user.is_authenticated %}
+        <h1 class="font-bold italic text-navy-blue">Bienvenido {{ request.user.username }} </h1> 
+    {%endif%}
+
+    <div class="flex justify-around items-center space-x-4 m-4">
+        {% if user.rol == user.EMPRENDEDOR and user.emprendedor_profile.startup %}
+        <a href="{% url 'profile-startup' %}" class="w-1/3 bg-blue-500 hover:bg-navy-blue text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-center">
+            Mi Startup
+        </a>
+        {%endif%}
+        {% if user.rol == user.EMPRENDEDOR and user.emprendedor_profile.startup and user.emprendedor_profile.startup.programa %}
+        <a href="{% url 'ruta-emprendedor' %}" class="w-1/3 bg-blue-500 hover:bg-navy-blue text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-center"> 
+            Ruta del emprendedor
+        </a>
+        <a href="{% url 'modulos-programa' programa_id=user.emprendedor_profile.startup.programa.id %}" class="w-1/3 bg-blue-500 hover:bg-navy-blue text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-center">
+            Módulos
+        </a>
+        {%endif%}
+    </div>
+
+    <section class="relative bg-gray-900 text-white min-h-screen flex items-center">
+        <!-- Hero Image -->
+        <div class="absolute inset-0 overflow-hidden">
+            {% if page.image %}
+            <div class="w-full h-full">
+                {% image page.image fill-1920x1080 class="w-full h-full object-cover" %}
+            </div>
+            {% endif %}
+            <div class="absolute inset-0 bg-black opacity-60"></div>
+        </div>
+    
+        <!-- Hero Content -->
+        <div class="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 md:py-48">
+            <!-- Hero Text -->
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
+                {{ page.hero_text }}
+            </h1>
+    
+            <!-- Hero CTA -->
+            <div class="flex flex-col sm:flex-row gap-6">
+                {% if page.hero_cta_link %}
+                    <a href="{% pageurl page.hero_cta_link %}" class="inline-flex justify-center items-center px-8 py-4 border border-transparent text-xl font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300">
+                        {% firstof page.hero_cta page.hero_cta_link.title %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <div class="relative w-full my-12 overflow-hidden rounded-xl carousel">
+        <div class="relative pb-[56.25%]"> <!-- Aspect ratio 16:9 -->
+            {% for carousel_image in page.carousel_images.all %}
+            <div class="carousel-item absolute inset-0 w-full h-full flex-shrink-0 transition-opacity duration-500 ease-in-out {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}" data-index="{{ forloop.counter0 }}">
+                {% image carousel_image.image fill-1920x1080 as img %}
+                <img src="{{ img.url }}" alt="{{ carousel_image.caption }}" class="w-full h-full object-contain">
+                {% if carousel_image.caption %}
+                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-800 bg-opacity-50 text-white">
+                    {{ carousel_image.caption }}
+                </div>
+                {% endif %}
+            </div> 
+            {% endfor %}
+        </div>
+    
+        <!-- Botones de navegación -->
+        <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white text-black rounded-full p-2 opacity-50 hover:opacity-100 transition-opacity" onclick="prevSlide()">
+            <i class="fa fa-chevron-left"></i>
+        </button>
+        <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white text-black rounded-full p-2 opacity-50 hover:opacity-100 transition-opacity" onclick="nextSlide()">
+            <i class="fa fa-chevron-right"></i>
+        </button>
+    
+        <!-- Indicadores -->
+        <div class="carousel-indicators absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-2">
+            {% for carousel_image in page.carousel_images.all %}
+            <span class="indicator block h-3 w-3 cursor-pointer rounded-full transition-all bg-white opacity-50 hover:opacity-100" data-index="{{ forloop.counter0 }}"></span>
+            {% endfor %}
+        </div>
+    </div>
+    
+        <section class="flex justify-around items-center space-x-4 mb-12">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center mb-8">Sobre nosotros</h2>
+                <div class="prose prose-lg mx-auto">
+                    {{ page.body|richtext }}
+                </div>
+            </div>
+        </section>
+</div>
+<script src="{% static 'js/carrusel.js' %}"></script>
+{% endblock content %}

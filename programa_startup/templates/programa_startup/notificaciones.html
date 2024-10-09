@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="container px-4 py-8 max-w-4xl bg-white shadow rounded-lg">
+    <div class="flex items-center mb-6">
+      <a href="/" class="inline-flex items-center p-2 text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span class="sr-only">Volver</span>
+      </a>
+      <h1 class="text-2xl font-bold ml-4">Todas las Notificaciones</h1>
+    </div>
+    <div id="mensaje" class="text-center text-green"></div>
+    <div class="bg-white shadow rounded-lg mt-10">
+      {% if notificaciones %}
+          <div class="flex justify-between mb-4">
+            <button id="marcar-todas-leidas" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Marcar todas como leídas
+            </button>
+            <button id="eliminar-todas" class="bg-red hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Eliminar todas las notificaciones
+            </button>
+          </div>
+          <ul class="divide-y divide-gray-200">
+              {% for notificacion in notificaciones %}
+                  <li class="flex items-start p-4">
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">
+                            <span class="{% if notificacion.leido %}font-normal{% else %}font-semibold{% endif %}">{{ notificacion.tipo }}</span>: 
+                            <span class="{% if notificacion.leido %}font-normal{% else %}font-medium{% endif %}">{{ notificacion.mensaje }}</span>
+                        </p>
+                          <p class="mt-1 text-xs text-gray-500">{{ notificacion.fecha_creacion|date:"d M Y H:i" }}</p>
+                      </div>
+                  </li>
+              {% endfor %}
+          </ul>
+          {% if not show_all and notificaciones.count > max_notificaciones %}
+              <div class="p-4 text-center">
+                  <a href="{% url 'lista-notificaciones' %}?show_all=1" class="text-sm text-blue-600 hover:text-blue-700">Ver todas las notificaciones</a>
+              </div>
+          {% endif %}
+      {% else %}
+          <p class="p-4 text-gray-700">No tienes notificaciones.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const csrftoken = getCookie('csrftoken');
+      
+      // Función para marcar todas las notificaciones como leídas
+      document.getElementById('marcar-todas-leidas').addEventListener('click', function() {
+          if (confirm('¿Estás seguro de que quieres marcar todas las notificaciones como leídas?')) {
+              fetch('/notificaciones/marcar-todas-leidas/', {
+                  method: 'POST',
+                  headers: {
+                      'X-CSRFToken': csrftoken,
+                      'Content-Type': 'application/json',
+                  },
+              })
+              .then(response => {
+                  if (response.ok) {
+                      mostrarMensaje('Todas las notificaciones han sido marcadas como leídas.');
+                      // Aquí puedes refrescar la lista de notificaciones o hacer algo adicional
+                      location.reload();
+                  } else {
+                      mostrarMensaje('Error al marcar como leídas.');
+                  }
+              })
+              .catch(error => {
+                  mostrarMensaje('Error en la solicitud.');
+              });
+          }
+      });
+  
+      // Función para eliminar todas las notificaciones
+      document.getElementById('eliminar-todas').addEventListener('click', function() {
+          if (confirm('¿Estás seguro de que quieres eliminar todas las notificaciones?')) {
+              fetch('/notificaciones/eliminar-todas/', {
+                  method: 'POST',
+                  headers: {
+                      'X-CSRFToken': csrftoken,
+                      'Content-Type': 'application/json',
+                  },
+              })
+              .then(response => {
+                  if (response.ok) {
+                      mostrarMensaje('Todas las notificaciones han sido eliminadas.');
+                      location.reload();
+                  } else {
+                      mostrarMensaje('Error al eliminar las notificaciones.');
+                  }
+              })
+              .catch(error => {
+                  mostrarMensaje('Error en la solicitud.');
+              });
+          }
+      });
+  
+      // Función para mostrar un mensaje en pantalla
+      function mostrarMensaje(mensaje) {
+          const mensajeDiv = document.getElementById('mensaje');
+          mensajeDiv.innerHTML = mensaje;
+          mensajeDiv.style.display = 'block';
+      }
+  
+      // Función para obtener el valor de la cookie CSRF
+      function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              const cookies = document.cookie.split(';');
+              for (let i = 0; i < cookies.length; i++) {
+                  const cookie = cookies[i].trim();
+                  if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+  });
+  </script>
+  
+
+{% endblock %}

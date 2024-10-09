@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+{% block footer %}{% endblock %}
+
+<div class="container mx-auto p-4 max-w-3xl">
+  <h1 class="text-3xl font-bold mb-6">Crear Startup</h1>
+  <form id="crear-startup-form" method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+    
+    <!-- Nombre -->
+    <div>
+      <label for="name" class="block text-navy-blue font-semibold mb-2">Nombre</label>
+      <input
+        id="name"
+        name="nombre"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+        placeholder="Ingrese el nombre de su Startup"
+      />
+    </div>
+
+    <!-- Descripción -->
+    <div>
+      <label for="description" class="block text-navy-blue font-semibold mb-2">Descripción</label>
+      <textarea
+        id="description"
+        name="descripcion"
+        class="w-full h-auto p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 resize-none"
+        placeholder="Añade una descripción a tu Startup"
+      ></textarea>
+    </div>
+
+    <!-- Logo -->
+    <div>
+      <label for="logo" class="block text-navy-blue font-semibold mb-2">Logo</label>
+      <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+        <div class="space-y-1 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div class="flex text-sm text-gray-600">
+            <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+              <span>Subir un archivo</span>
+              <input id="file-upload" name="logo" type="file" class="sr-only" />
+            </label>
+            <p class="pl-1">o arrastrar y soltar</p>
+          </div>
+          <p class="text-xs text-gray-500">PNG, JPG hasta 10MB</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problema -->
+    <div>
+      <label for="problematica" class="block text-navy-blue font-semibold mb-2">Problemática</label>
+      <input
+        id="problematica"
+        name="problematica"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+        placeholder="Problemática"
+      />
+    </div>
+
+    <!-- Propuesta de valor -->
+    <div>
+      <label for="propuestaValor" class="block text-navy-blue font-semibold mb-2">Propuesta de valor</label>
+      <input
+        id="propuestaValor"
+        name="propuesta_valor"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+        placeholder="Propuesta de valor de su Startup"
+      />
+    </div>
+
+    <!-- Público objetivo -->
+    <div>
+      <label for="publicoObjetivo" class="block text-navy-blue font-semibold mb-2">Público objetivo</label>
+      <input
+        id="publicoObjetivo"
+        name="publico_objetivo"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+        placeholder="Defina su público objetivo"
+      />
+    </div>
+
+    <!-- Socios clave -->
+    <div>
+      <label for="sociosClave" class="block text-navy-blue font-semibold mb-2">Socios clave</label>
+      <input
+        id="sociosClave"
+        name="socios_clave"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+        placeholder="Mencione los socios clave"
+      />
+    </div>
+
+    <!-- Canales -->
+    <div>
+      <label for="canales" class="block text-navy-blue font-semibold mb-2">Canales</label>
+      <input
+        id="canales"
+        name="canales"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+        placeholder="Defina los canales de distribución"
+      />
+    </div>
+
+    <!-- Producto/Servicio -->
+    <div>
+      <label for="productoServicio" class="block text-navy-blue font-semibold mb-2">Producto/Servicio</label>
+      <textarea
+        id="productoServicio"
+        name="producto_servicio"
+        class="w-full h-auto p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 resize-none"
+        placeholder="Describa su producto o servicio"
+      ></textarea>
+    </div>
+
+    <!-- Integrantes -->
+    <div>
+        <label class="block text-navy-blue font-semibold mb-2">Integrantes</label>
+        <div class="relative flex items-center space-x-2">
+          <input
+            id="search-integrante"
+            type="text"
+            placeholder="Buscar integrante..."
+            class="flex-1 p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          />
+          <button
+            type="button"
+            id="buscar-btn"
+            class="bg-white text-gray-600 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Buscar Integrante
+          </button>
+        </div>
+        <div id="resultados-busqueda" class="mt-4 space-y-2">
+          <!-- Resultados de búsqueda se insertan aquí -->
+        </div>
+        <div class="mt-4 space-y-2">
+          <h4 class="text-lg font-semibold">Integrantes seleccionados:</h4>
+          <ul id="integrantes-lista" class="space-y-2">
+            <!-- Integrantes seleccionados se insertan aquí -->
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Modal -->
+      <div id="cargoModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden text-ce">
+        <div class="bg-white p-6 rounded-md shadow-lg">
+          <h2 class="text-lg font-semibold mb-4">Escribe el cargo para este integrante</h2>
+          <input
+            id="cargo-input"
+            type="text"
+            placeholder="Cargo"
+            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          />
+          <div class="mt-4 flex justify-end space-x-2">
+            <button
+              id="cancel-btn"
+              type="button"
+              class="bg-red text-white px-4 py-2 rounded-md hover:bg-red-600"
+            >
+              Cancelar
+            </button>
+            <button
+              id="save-cargo-btn"
+              type="button"
+              class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+
+    <button
+      type="submit"
+      class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      Crear Startup
+    </button>
+  </form>
+</div>
+<script>
+    document.getElementById('buscar-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        const query = document.getElementById('search-integrante').value.trim();
+    
+        if (query === '') {
+            alert('Por favor, ingresa un nombre para buscar.');
+            return;
+        }
+    
+        fetch(`/buscar-integrante/?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultadosDiv = document.getElementById('resultados-busqueda');
+                resultadosDiv.innerHTML = '';  // Limpiar resultados anteriores
+    
+                if (data.results.length === 0) {
+                    resultadosDiv.style.display = 'none';  // Ocultar el div si no hay resultados
+                    resultadosDiv.innerHTML = '<p class="text-gray-600">No se encontraron integrantes.</p>';
+                } else {
+                    resultadosDiv.style.display = 'block';  // Mostrar el div si hay resultados
+                    data.results.forEach(function(integrante) {
+                        const integranteDiv = document.createElement('div');
+                        integranteDiv.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'border', 'border-gray-300', 'rounded-md', 'mb-2');
+                        
+                        const nombreSpan = document.createElement('span');
+                        nombreSpan.textContent = integrante.nombre;
+                        nombreSpan.classList.add('flex-1');
+                        
+                        const agregarBtn = document.createElement('button');
+                        agregarBtn.textContent = 'Agregar';
+                        agregarBtn.type = 'button';
+                        agregarBtn.classList.add('bg-blue-600', 'text-white', 'px-3', 'py-1', 'rounded-md', 'hover:bg-blue-700', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2', 'focus:ring-blue-500');
+                        agregarBtn.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            showCargoModal(integrante.id, integrante.nombre); // Mostrar el modal para ingresar el cargo
+                        });
+    
+                        integranteDiv.appendChild(nombreSpan);
+                        integranteDiv.appendChild(agregarBtn);
+                        resultadosDiv.appendChild(integranteDiv);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al buscar integrantes:', error);
+                alert('Ocurrió un error al buscar el integrante. Por favor, inténtelo de nuevo.');
+            });
+    });
+    
+    function showCargoModal(id, nombre) {
+        const cargoModal = document.getElementById('cargoModal');
+        const saveCargoBtn = document.getElementById('save-cargo-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const cargoInput = document.getElementById('cargo-input');
+    
+        cargoModal.classList.remove('hidden');
+        cargoInput.value = '';
+    
+        saveCargoBtn.onclick = function() {
+            const cargo = cargoInput.value.trim();
+            if (!cargo) {
+                alert('El cargo no puede estar vacío.');
+                return;
+            }
+            agregarIntegrante(id, nombre, cargo); // Pasar el cargo al agregar el integrante
+            cargoModal.classList.add('hidden');
+        };
+    
+        cancelBtn.onclick = function() {
+            cargoModal.classList.add('hidden');
+        };
+    }
+    
+    function agregarIntegrante(id, nombre, cargo) { // Añadir el parámetro 'cargo'
+        const integrantesLista = document.getElementById('integrantes-lista');
+        
+        // Verificar si el integrante ya está en la lista
+        const integrantesItems = integrantesLista.querySelectorAll('li');
+        for (let item of integrantesItems) {
+            if (item.dataset.id === id) {
+                alert('Este integrante ya está en la lista.');
+                return; // No agregar el mismo integrante si ya está en la lista
+            }
+        }
+        
+        const integranteItem = document.createElement('li');
+        integranteItem.textContent = `${nombre} - Cargo: ${cargo}`; // Incluir el cargo en el texto
+        integranteItem.classList.add('flex', 'items-center', 'justify-between', 'p-2', 'border', 'border-gray-300', 'rounded-md', 'mb-2');
+        integranteItem.dataset.id = id;
+        
+        // Crear un campo input oculto para enviar el ID y cargo del integrante
+        const integranteInput = document.createElement('input');
+        integranteInput.type = 'hidden';
+        integranteInput.name = 'integrantes';
+        integranteInput.value = `${id}:${cargo}`;
+        
+        integranteItem.appendChild(integranteInput); // Añadir el input al item de la lista
+        
+        const eliminarBtn = document.createElement('button');
+        eliminarBtn.textContent = 'Eliminar';
+        eliminarBtn.type = 'button';
+        eliminarBtn.classList.add('bg-red', 'text-white', 'px-3', 'py-1', 'rounded-md', 'hover:bg-red-700', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2', 'focus:ring-red-500');
+        eliminarBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            integranteItem.remove();
+        });
+    
+        integranteItem.appendChild(eliminarBtn);
+        integrantesLista.appendChild(integranteItem);
+        
+        // Limpiar y ocultar el div de resultados después de agregar el integrante
+        const resultadosDiv = document.getElementById('resultados-busqueda');
+        resultadosDiv.innerHTML = '';
+        resultadosDiv.style.display = 'none';
+    }
+    
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% load static %}
+
+<div class="custom-profile-widget relative group">
+    {% if widget.value %}
+        <img src="{{ widget.value.url }}" alt="Foto de perfil" class="h-56 w-56 rounded-full shadow-lg object-cover">
+    {% else %}
+        <img src="{% static 'img/default-profile.png' %}" alt="Foto de perfil por defecto" class="h-56 w-56 rounded-full shadow-lg object-cover">
+    {% endif %}
+
+    <!-- Botón de edición superpuesto -->
+    <label for="{{ widget.attrs.id }}" class="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 rounded-full cursor-pointer">
+        <i class="fa-solid fa-pen-to-square text-white text-2xl"></i>
+    </label>
+
+    <!-- Input de archivo oculto -->
+    <input id="{{ widget.attrs.id }}" type="file" name="{{ widget.name }}" accept="image/*" class="hidden">
+</div>

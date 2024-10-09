@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-center mb-6">Solicitar Mentoría</h2>
+            <form id="mentorshipForm" method="post" class="space-y-6">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block font-semibold text-gray-700">Estás solicitando mentoría con</label>
+                        <p class="text-gray-700">{{ mentor.user.username }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block font-semibold text-gray-700">Especialidad</label>
+                        <p class="text-gray-700">{{ mentor.especialidad|default:"Sin especialidad" }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block font-semibold text-gray-700">Disponibilidad</label>
+                        <p class="text-gray-700">{{ mentor.disponibilidad|default:"No especificada" }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block font-semibold text-gray-700">Tipo de mentoría</label>
+                        {% if mentor.puede_cobrar %}
+                            <p class="text-gray-700">De paga</p>
+                            <p class="text-gray-700">Precio por hora: S/.{{ mentor.precio_por_hora }}</p>
+                        {% else %}
+                            <p class="text-gray-700">Gratis</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="fecha" class="block font-semibold text-gray-700">Fecha</label>
+                    <input type="datetime-local" id="fecha" name="fecha" required
+                           class="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="space-y-2">
+                    <label for="temas" class="block font-semibold text-gray-700">Temas</label>
+                    <textarea id="temas" name="temas" rows="4" required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Describe los temas que te gustaría tratar en la mentoría"></textarea>
+                </div>
+
+                <div class="flex justify-center">
+                    <button type="submit"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

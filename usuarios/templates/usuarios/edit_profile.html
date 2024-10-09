@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+{% block footer %}{% endblock %}
+<div class="flex justify-center items-center h-16 bg-navy-blue">
+    <h1 class="text-2xl font-bold text-center text-white">Editando Perfil de {{ user.get_rol_display }}</h1>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+    <div class="container mx-auto mt-8">
+        <!-- Profile Header -->
+        {% if user_form.non_field_errors %}
+            <div>
+                {{ user_form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="container mx-auto p-4">
+            <div class="bg-white p-6 rounded-lg shadow-md grid gap-6 items-center {% if user.rol == user.EMPRENDEDOR %}md:grid-cols-3{% else %}md:grid-cols-2{% endif %}">
+                <!-- Profile Photo and Name -->
+                <div class="flex flex-col items-center">
+                    <div class="relative group">
+                        <!-- Contenedor para la imagen de perfil usando el widget personalizado -->
+                        <div class="relative">
+                            {{ user_form.foto_perfil }}
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-semibold text-black mt-5 text-center">{{ user.username }} {{ user.apellido_paterno }} {{ user.apellido_materno }}</h2>
+                    {% if user.rol == user.EMPRENDEDOR %}
+                        {% if user.emprendedor_profile.cargo %}
+                            {{ user.emprendedor_profile.cargo }}
+                        {% else %}
+                            Falta asignarse un cargo
+                        {% endif %}
+                    {% elif user.rol == user.MENTOR %}
+                        {% if user.mentor_profile.especialidad %}
+                            {{ user.mentor_profile.especialidad }}
+                        {% else %}
+                            Falta especialidad
+                        {% endif %}
+                    {% endif %}
+                </div>
+            
+                {% if user.rol == user.EMPRENDEDOR %}
+                <!-- Resumen Section -->
+                <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+                    <h3 class="text-lg font-bold text-navy-blue mb-2">Resumen <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <div class="hidden">
+                        {% if user.emprendedor_profile.resumen_perfil %}
+                        <textarea disabled class="w-full h-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none" rows="5">{{ user.emprendedor_profile.resumen_perfil }}</textarea>
+                        {% else %}
+                            Falta su resumen de perfil
+                        {% endif %} 
+                    </div>
+                    <div>
+                        {{ emprendedor_form.resumen_perfil }}
+                    </div>
+                </div>
+            
+                <!-- Startup Section -->
+               
+                {% elif user.rol == user.MENTOR %}
+                <!-- Mentor's Biography Section -->
+                <div class="bg-gray-100 p-4 rounded-lg shadow-md h-full">
+                    <h3 class="text-lg font-bold text-navy-blue mb-2">Biografía <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <div class="hidden">
+                        {% if user.mentor_profile.biografia %}
+                        <textarea disabled class="w-full h-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none" rows="5">{{ user.mentor_profile.biografia }}</textarea>
+                        {% else %}
+                            Falta su biografía
+                        {% endif %} 
+                    </div>
+                    <div>
+                        {{ mentor_form.biografia }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+       <div class="container mx-auto mt-8">
+            <!-- Form Section -->
+            <div class="bg-white p-6 rounded-lg shadow-md ">
+                <h2 class="text-2xl font-bold text-black mb-6">Datos personales</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label for="{{ user_form.dni.id_for_label }}" class="block text-navy-blue font-semibold mb-2">DNI <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ user_form.dni }}
+                        </div>
+                        <div class="mb-4">
+                            <div class="hidden">
+                                <label class="block text-navy-blue font-semibold mb-2">Nombre completo</label>
+                                <input type="text" value="{{ user.username }} {{ user.apellido_paterno }} {{ user.apellido_materno }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            </div>
+                            <div>
+                                <div class="flex space-x-4 ">
+                                    <div class="w-1/3">
+                                        <label for="{{ user_form.username.id_for_label }}" class="block text-navy-blue font-semibold mb-8 sm:mb-2">Nombres <i class="fa-solid fa-pen-to-square"></i></label>
+                                        {{ user_form.username }}
+                                    </div>
+                                    <div class="w-1/3">
+                                        <label for="{{ user_form.apellido_paterno.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Apellido Paterno <i class="fa-solid fa-pen-to-square"></i></label>
+                                        {{ user_form.apellido_paterno }}
+                                    </div>
+                                    <div class="w-1/3">
+                                        <label for="{{ user_form.apellido_materno.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Apellido Materno <i class="fa-solid fa-pen-to-square"></i></label>
+                                        {{ user_form.apellido_materno }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ user_form.email.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Correo <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ user_form.email }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ user_form.celular.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Celular <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ user_form.celular }}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Género</label>
+                            <input type="text" value="{{ user.genero|default_if_none:'Género' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            <input type="hidden" name="genero" value="{{ user.genero }}">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Fecha de nacimiento </label>
+                            <input type="date" value="{{ user.fecha_nacimiento|date:'Y-m-d' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            <input type="hidden" name="fecha_nacimiento" value="{{ user.fecha_nacimiento|date:'Y-m-d' }}">
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ user_form.ocupacion.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Ocupación <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ user_form.ocupacion }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ user_form.red_social.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Red social <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ user_form.red_social }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            {% if user.rol == user.EMPRENDEDOR %}
+            <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                <h2 class="text-2xl font-bold text-black mb-6">Perfil de Emprendedor</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <!-- Left Column -->
+                    <div>
+                        <!-- no editables -->
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Cargo</label>
+                            <input type="text" value="{{ user.emprendedor_profile.cargo|default_if_none:'No tienes asignado un cargo' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            <input type="hidden" name="cargo" value="{{ user.emprendedor_profile.cargo }}">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Startup</label>
+                            <input type="text" value="{{ user.emprendedor_profile.startup|default_if_none:'No estás en ninguna Startup' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            <input type="hidden" name="startup" value="{{ user.emprendedor_profile.startup }}">
+                        </div>
+                        <!-- - -->
+                        <div class="mb-4">
+                            <label for="{{ emprendedor_form.grado_instruccion.id_for_label }}"  class="block text-navy-blue font-semibold mb-2">Grado de instrucción <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ emprendedor_form.grado_instruccion }}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label for="{{ emprendedor_form.universidad.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Universidad <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ emprendedor_form.universidad }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ emprendedor_form.facultad.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Facultad <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ emprendedor_form.facultad }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ emprendedor_form.escuela.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Escuela <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ emprendedor_form.escuela }}
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Interest Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Falta Sector de interés -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class=" text-navy-blue font-bold mb-2">Sector de interés <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <ul class="hidden text-black mb-4">
+                        {% for sector in sectores_interes %}
+                        <li>{{ sector }}</li>
+                        {% empty %}
+                        <li>No hay sectores de interés especificados.</li>
+                        {% endfor %}
+                    </ul>
+                    {{ emprendedor_form.sectores_interes }}
+                </div>
+
+                <!--Falta Habilidades blandas -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class=" text-navy-blue font-bold mb-2">Habilidades blandas <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <ul class="hidden text-black mb-4">
+                        {% for habilidad in habilidades_blandas %}
+                        <li>{{ habilidad }}</li>
+                        {% empty %}
+                        <li>No hay habilidades blandas especificadas.</li>
+                        {% endfor %}
+                    </ul>
+                    {{ emprendedor_form.habilidades_blandas }}
+                </div>
+
+                <!-- Startups seguidas -->
+           
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-navy-blue font-bold mb-2">Startups seguidas <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <div class="flex items-center mb-4">
+                        {% if startups_seguidas %}
+                            <div id="startups" class="space-y-4">
+                                {% for seguimiento in startups_seguidas %}
+                                    <div id="seguimiento-{{ seguimiento.pk }}" class="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                                        <input type="hidden" name="seguimiento_id" value="{{ seguimiento.pk }}">
+                                        <div>
+                                            <p>Startup: {{ seguimiento.startup.nombre }}</p>
+                                        </div>
+                                        <div>
+                                            <button type="button" 
+                                                    class="dejar-seguir-startup bg-red hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                                    data-seguimiento-id="{{ seguimiento.pk }}">
+                                                Dejar de Seguir
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p id="no-seguimientos">No estás siguiendo ninguna startup.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {% elif user.rol == user.MENTOR or user.rol == user.SPEAKER%}
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                <h2 class="text-2xl font-bold text-black mb-6">Perfil de Mentor</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label for="{{ mentor_form.profesion.id_for_label }}" class="block  text-navy-blue font-semibold mb-2">Profesión <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ mentor_form.profesion }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ mentor_form.especialidad.id_for_label }}" class="block text-blue-900 font-semibold mb-2">Especialidad <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ mentor_form.especialidad }}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label for="{{ mentor_form.empresa_a_cargo.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Empresa a cargo <i class="fa-solid fa-pen-to-square"></i></label>
+                            {{ mentor_form.empresa_a_cargo }}
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Pertenece a la UNHEVAL</label>
+                            
+                            <!-- Modo de vista: input de texto -->
+                            <div class="hidden">
+                                <input itype="text" value="{% if user.mentor_profile.pertenece_universidad %}Sí{% else %}No{% endif %}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            </div>
+                            <!-- Modo de edición: toggle switch -->
+                            <div class="items-center">
+                                {{ mentor_form.pertenece_universidad }}
+                                <i id="toggle-icon" class="fa-solid fa-toggle-off text-gray-500 cursor-pointer transition-transform duration-200" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Interest Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Beneficios -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class=" text-navy-blue font-bold mb-2">Beneficios <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <ul class="hidden text-black mb-4">
+                        {% for beneficio in mentor_form.cleaned_data.beneficios.splitlines %}
+                        <li>{{ beneficio }}</li>
+                        {% empty %}
+                            <li>No hay beneficios especificados.</li>
+                        {% endfor %}
+                    </ul>
+                    <div>
+                        {{ mentor_form.beneficios }}
+                    </div>
+                </div>
+
+                <!-- Sala personal -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-blue-900 font-bold mb-2">Enlace a sala personal de las sesiones virtuales <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <div>
+                        {{ mentor_form.sala_virtual }}
+                    </div>
+                </div>
+                <!-- Disponibilidad -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-navy-blue font-bold mb-2">Disponibilidad <i class="fa-solid fa-pen-to-square"></i></h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Column -->
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-navy-blue font-semibold mb-2">Programa:</label>
+                                <input type="text" value="{{ user.mentor_profile.programa|default:"No asignado" }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            </div>
+                        </div>
+                        <!-- Right Column -->
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-navy-blue font-semibold mb-2">Precio por hora:</label>
+                                <input type="text" value="{{ user.mentor_profile.get_precio }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden">
+                        <label class="block text-navy-blue font-semibold mb-2">Horario:</label>
+                        <input type="text" value="{{ user.mentor_profile.disponibilidad|default:"No especificada" }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div>
+                        <label for="{{ mentor_form.disponibilidad.id_for_label }}" class="block text-navy-blue font-semibold mb-2">Horario:</label>
+                        {{ mentor_form.disponibilidad }}
+                    </div>
+                </div>
+
+                <!-- Mentoría startups -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-navy-blue font-bold mb-2">Mentoría de Startups</h3>
+                    <ul class="text-black mb-4">
+                        {% for mentoria in mentoria_startups %}
+                            {% if mentoria.estado != 'COMPLETADA' %}
+                            <li>
+                                Startup: {{ mentoria.startup.nombre }} - 
+                                Estado: <span class="mentoria-estado">{{ mentoria.estado }}</span>  
+                                <button class="mark-completed-btn btn-primary mt-4 hover:underline" data-mentoria-id="{{ mentoria.id }}">Marcar como Completada</button>
+                            </li>
+                            {% endif %}
+                            <li>No tienes ninguna mentoría asociada.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        </div>
+        <div class="mt-8 flex justify-center space-x-4">
+            <button type="submit" class="bg-green text-white py-2 px-6 rounded-lg items-center justify-center">
+                Actualizar datos <i class="fa-solid fa-save ml-2"></i>
+            </button>
+            <button class="bg-red text-white py-2 px-6 rounded-lg flex items-center justify-center">Cancelar <i class="fa-solid fa-xmark ml-2" style="color: #ffffff;"></i></button>
+        </div>
+      </div>
+    </div>
+</form>
+    
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        const csrftoken = getCookie('csrftoken');
+    
+        document.querySelectorAll('.dejar-seguir-startup').forEach(button => {
+            button.addEventListener('click', function() {
+                const seguimientoId = this.getAttribute('data-seguimiento-id');
+                if (confirm('¿Estás seguro de que quieres dejar de seguir esta startup?')) {
+                    fetch(`/dejar-seguir-startup/${seguimientoId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Eliminar la startup de la interfaz
+                            const seguimientoElement = document.getElementById(`seguimiento-${seguimientoId}`);
+                            if (seguimientoElement) {
+                                seguimientoElement.remove();
+                            }
+    
+                            // Verificar si no quedan más startups seguidas
+                            const seguimientosContainer = document.querySelector('#startups .space-y-4');
+                            if (seguimientosContainer && !seguimientosContainer.querySelector('.flex')) {
+                                seguimientosContainer.innerHTML = '<p id="no-seguimientos">No estás siguiendo ninguna startup.</p>';
+                            }
+    
+                            alert('Has dejado de seguir la startup con éxito.');
+                        } else {
+                            alert('Error al dejar de seguir la startup: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al dejar de seguir la startup.');
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.mark-completed-btn').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const mentoriaId = this.getAttribute('data-mentoria-id');
+    
+                fetch('/marcar-mentoria-completada/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ mentoria_id: mentoriaId }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Actualiza el estado en la interfaz de usuario sin recargar la página
+                        const estadoElement = document.querySelector(`#mentoria-${mentoriaId} .mentoria-estado`);
+                        const buttonElement = this;
+                        if (estadoElement) {
+                            estadoElement.innerText = 'COMPLETADA'; // Cambia el estado visualmente
+                        }
+                        buttonElement.style.display = 'none';
+                        alert('Mentoría marcada como completada.');
+                    } else {
+                        alert(data.error || 'Error al marcar la mentoría.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al procesar la solicitud.');
+                });
+            });
+        });
+        // Función para obtener el CSRF token de las cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Comprueba si esta cookie es la que estamos buscando
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+
+{% endblock content %}

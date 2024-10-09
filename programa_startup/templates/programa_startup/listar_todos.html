@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto p-4 max-w-6xl">
+    <h1 class="text-4xl font-bold text-center mb-8">Nuestra Comunidad</h1>
+    
+    <div class="w-full">
+        <!-- Tabs List -->
+        <div id="tabs" class="grid w-full grid-cols-3 mb-4">
+            <button id="btn-emprendedores" class="py-2 px-4 text-center bg-gray-200 focus:bg-blue-500 focus:text-white" onclick="showTab('emprendedores', 'btn-emprendedores')">Emprendedores</button>
+            <button id="btn-mentores" class="py-2 px-4 text-center bg-gray-200 hover:bg-gray-300 focus:bg-blue-500 focus:text-white" onclick="showTab('mentores', 'btn-mentores')">Mentores</button>
+            <button id="btn-startups" class="py-2 px-4 text-center bg-gray-200 hover:bg-gray-300 focus:bg-blue-500 focus:text-white" onclick="showTab('startups', 'btn-startups')">Startups</button>
+        </div>
+        
+        <!-- Usuarios Tab Content -->
+        <div id="emprendedores" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for emprendedor in usuarios %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="flex flex-col items-center p-6">
+                        <div class="w-24 h-24 rounded-full bg-gray-300 mb-4 overflow-hidden">
+                            {% if user.foto_perfil %}
+                                <img src="{{ emprendedor.user.foto_perfil.url }}?height=100&width=100" alt="{{ emprendedor.user.username }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'img/default-profile.png' %}?height=100&width=100" alt="Default Profile Photo" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2 text-center">{{ emprendedor.user.username }}
+                            {% if emprendedor.user.apellido_paterno %}
+                                {{ emprendedor.user.apellido_paterno }}
+                            {% endif %}
+                            {% if emprendedor.user.apellido_materno %}
+                                {{ emprendedor.user.apellido_materno }}
+                            {% endif %} </h3>
+                        <p class="text-sm text-gray-500">{{ emprendedor.user.email }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                    <p>No hay usuarios registrados.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Mentores Tab Content -->
+        <div id="mentores" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for mentor in mentores %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="flex flex-col items-center p-6">
+                        <div class="w-24 h-24 rounded-full bg-gray-300 mb-4 overflow-hidden">
+                            {% if user.foto_perfil %}
+                                <img src="{{ mentor.user.foto_perfil.url }}?height=100&width=100" alt="{{ mentor.user.username }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'img/default-profile.png' %}?height=100&width=100" alt="Default Profile Photo" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">{{ mentor.user.username }}</h3>
+                        <p class="text-sm text-gray-500">Especialidad: {{ mentor.especialidad|default:"Sin especialidad" }}</p>
+                        {% if user.is_authenticated and user.emprendedor_profile.startup and user.emprendedor_profile.cargo == 'Founder' %}
+                            {% if mentor.tiene_mentoria_pendiente %}
+                                <button class="cancelar-mentoria btn btn-primary mt-4 hover:underline" 
+                                        data-mentoria-id="{{ mentor.mentoria_pendiente_id }}">
+                                    Cancelar Mentoría
+                                </button>
+                            {% else %}
+                                <a href="{% url 'solicitar-mentoria' mentor.id %}" 
+                                class="btn btn-primary mt-4 hover:underline">
+                                    Solicitar Mentoría
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                    <p>No hay mentores registrados.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Startups Tab Content -->
+        <div id="startups" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for startup in startups %}
+                <div id="seguimiento-{{ startup.id }}" class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="flex flex-col items-center p-6">
+                        <div class="w-24 h-24 rounded-full bg-gray-300 mb-4 overflow-hidden">
+                            {% if startup.logo %}
+                                <img src="{{ startup.logo.url }}?height=100&width=100" alt="{{ startup.nombre }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'img/default-startup.png' %}?height=100&width=100" alt="Default Profile Photo" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2 text-center">{{ startup.nombre }}</h3>
+                        <p class="text-sm text-gray-500 text-center">Fundador: {{ startup.fundador.username }}</p>
+                        {% if user.is_authenticated and user.rol == user.EMPRENDEDOR %}
+                            {% if startup.id in seguidores_startup_ids %}
+                            <div>
+                                <button type="button" 
+                                        class="dejar-seguir-startup btn btn-primary mt-4 hover:underline"
+                                        data-seguimiento-id="{{ startup.seguimiento_id }}">
+                                    Dejar de Seguir
+                                </button>
+                            </div>
+                            {% else %}
+                                <a href="{% url 'seguir-startup' startup.id %}" class="btn btn-primary mt-4 hover:underline">Seguir Startup</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                    <p>No hay startups registradas.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+
+
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrftoken = getCookie('csrftoken');
+    
+        document.querySelectorAll('.cancelar-mentoria').forEach(button => {
+            button.addEventListener('click', function() {
+                const mentoriaId = this.getAttribute('data-mentoria-id');
+                if (confirm('¿Estás seguro de que quieres cancelar esta mentoría?')) {
+                    fetch(`/cancelar-mentoria/${mentoriaId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Encontrar el contenedor del mentor
+                            alert('Mentoría cancelada con éxito.');
+                            window.location.reload();
+                        } else {
+                            alert('Error al cancelar la mentoría: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al cancelar la mentoría.');
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.dejar-seguir-startup').forEach(button => {
+            button.addEventListener('click', function() {
+                const seguimiento_id = this.getAttribute('data-seguimiento-id');
+                if (confirm('¿Estás seguro de que quieres dejar de seguir esta startup?')) {
+                    fetch(`/dejar-seguir-startup/${seguimiento_id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('Has dejado de seguir la startup con éxito.');
+                            // Recargar la página
+                            window.location.reload();
+                        } else {
+                            alert('Error al dejar de seguir la startup: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al dejar de seguir la startup.');
+                    });
+                }
+            });
+        });
+        
+    
+        // Función para obtener el valor de una cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+
+    function showTab(tabName, buttonId) {
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.add('hidden'));
+        document.getElementById(tabName).classList.remove('hidden');
+
+        const buttons = document.querySelectorAll('#tabs button');
+        buttons.forEach(button => button.classList.remove('bg-blue-500', 'text-white'));
+        document.getElementById(buttonId).classList.add('bg-blue-500', 'text-white');
+    }
+
+    // Mostrar la pestaña de emprendedores por defecto y pintar el botón
+    showTab('emprendedores', 'btn-emprendedores');
+
+    // Mantener el botón pintado al hacer clic fuera del grid o en la página
+    document.addEventListener('click', function(event) {
+        const buttons = document.querySelectorAll('#tabs button');
+        buttons.forEach(button => {
+            if (button.classList.contains('bg-blue-500')) {
+                button.classList.add('bg-blue-500', 'text-white');
+            }
+        });
+    });
+</script>
+{% endblock %}

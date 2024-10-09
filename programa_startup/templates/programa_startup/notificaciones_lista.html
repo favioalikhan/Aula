@@ -1,0 +1,23 @@
+<ul>
+    {% if has_unread %}
+        {% for notificacion in notificaciones|slice:":5" %}
+            <li class="py-2 px-4 hover:bg-gray-100">
+                <p class="{% if notificacion.leido %}font-normal{% else %}font-semibold{% endif %} text-sm font-medium">{{ notificacion.mensaje|truncatechars:80 }}</p>
+                <p class="{% if notificacion.leido %}font-normal{% else %}font-medium{% endif %} text-xs text-gray-500">Hace {{ notificacion.fecha_creacion|timesince }}</p>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li class="py-2 px-4">
+            {% if has_notifications %}
+                No hay notificaciones nuevas.
+            {% else %}
+                No hay notificaciones.
+            {% endif %}
+        </li>
+    {% endif %}
+</ul>
+{% if notificaciones.count > 5 %}
+    <a href="{% url 'lista-notificaciones' %}" class="block py-2 px-4 text-center text-blue-600 hover:bg-gray-100">
+        Ver todas las notificaciones
+    </a>
+{% endif %}

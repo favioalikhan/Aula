@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+{% block footer %}{% endblock %}
+
+<div class="flex justify-center items-center h-16 bg-navy-blue">
+    <h1 class="text-2xl font-bold text-center text-white">Perfil de {{ user.get_rol_display }}</h1>
+</div>
+<div class="container mx-auto mt-8">
+    <!-- Profile Header -->
+    <div class="container mx-auto p-4">
+        <div class="bg-white p-6 rounded-lg shadow-md grid gap-6 items-center {% if user.rol == user.EMPRENDEDOR %}md:grid-cols-3{% else %}md:grid-cols-2{% endif %}">
+            <!-- Profile Photo and Name -->
+            <div class="flex flex-col items-center">
+                <div class="relative group">
+                    <!-- Contenedor para la imagen de perfil -->
+                    <div class="relative">
+                    
+                        {% if user.foto_perfil %}
+                            <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                        {% else %}
+                            <img src="{% static 'img/default-profile.png' %}" alt="Default Profile Photo" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                        {% endif %}
+                        
+                    </div>
+            
+                </div>
+                <h2 class="text-xl font-semibold text-black mt-5 text-center">{{ user.username }} {{ user.apellido_paterno }} {{ user.apellido_materno }}</h2>
+                {% if user.rol == user.EMPRENDEDOR %}
+                    {% if user.emprendedor_profile.cargo %}
+                        {{ user.emprendedor_profile.cargo }}
+                    {% else %}
+                        Falta asignarse un cargo
+                    {% endif %}
+                {% elif user.rol == user.MENTOR or user.rol == user.SPEAKER %}
+                    {% if user.mentor_profile.especialidad %}
+                        {{ user.mentor_profile.especialidad }}
+                    {% else %}
+                        Falta especialidad
+                    {% endif %}
+                {% endif %}
+            </div>
+        
+            {% if user.rol == user.EMPRENDEDOR %}
+            <!-- Resumen Section -->
+            <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+                <h3 class="text-lg font-bold text-navy-blue mb-2">Resumen</h3>
+               
+                    {% if user.emprendedor_profile.resumen_perfil %}
+                    <textarea disabled class="w-full h-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none" rows="5">{{ user.emprendedor_profile.resumen_perfil }}</textarea>
+                    {% else %}
+                        Falta su resumen de perfil
+                    {% endif %} 
+               
+            </div>
+        
+            <!-- Startup Section -->
+            <div class="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md">
+                {% if user.emprendedor_profile.startup %}
+                    <h3 class="text-lg font-bold text-navy-blue mb-2">{{ user.emprendedor_profile.startup }}</h3>
+                    {% if user.emprendedor_profile.startup.logo %}
+                        <img src="{{ user.emprendedor_profile.startup.logo.url }}" alt="Logo de {{ user.emprendedor_profile.startup.nombre }}" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                            {% else %}
+                        <img src="{% static 'img/default-startup.png' %}" alt="Logo predeterminado" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                    {% endif %}
+                    <a href="{% url 'profile-startup' %}" class="inline-flex items-center px-6 py-2 mt-4 bg-blue-700 text-white rounded-md hover:bg-navy-blue">
+                        Ver Startup
+                    </a>
+                {% else %}
+                    <a href="{% url 'register-startup' %}" class="inline-flex items-center px-6 py-2 bg-blue-700 text-white rounded-md hover:bg-navy-blue">
+                        Crear Startup
+                    </a>
+                {% endif %}
+            </div>
+            {% elif user.rol == user.MENTOR or user.rol == user.SPEAKER %}
+            <!-- Mentor's Biography Section -->
+            <div class="bg-gray-100 p-4 rounded-lg shadow-md h-full">
+                <h3 class="text-lg font-bold text-navy-blue mb-2">Biografía</h3>
+                
+                    {% if user.mentor_profile.biografia %}
+                    <textarea disabled class="w-full h-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none" rows="5">{{ user.mentor_profile.biografia }}</textarea>
+                    {% else %}
+                        Falta su biografía
+                    {% endif %} 
+                
+            </div>
+            {% endif %}
+        </div>
+
+    <div class="container mx-auto mt-8">
+        <!-- Form Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md ">
+            <h2 class="text-2xl font-bold text-black mb-6">Datos personales</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <!-- Left Column -->
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">DNI</label>
+                        <input type="text" name="{{ user.dni }}" value="{{ user.dni|default_if_none:'DNI' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none text-blue-gray-400 edit-input">
+                    </div>
+                
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Nombre</label>
+                        <input type="text" value="{{ user.username }} {{ user.apellido_paterno }} {{ user.apellido_materno }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Correo</label>
+                        <input type="email" name="email" value="{{ user.email }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Celular</label>
+                        <input type="text" name="celular" value="{{ user.celular|default_if_none:'+51' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Género</label>
+                        <input type="text" value="{{ user.genero|default_if_none:'Género' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Fecha de nacimiento</label>
+                        <input type="date" value="{{ user.fecha_nacimiento|date:'Y-m-d' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Ocupación</label>
+                        <input type="text" value="{{ user.ocupacion|default_if_none:'Ocupación' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Red social</label>
+                        <input type="text" value="{{ user.red_social|default_if_none:'URL de su red social' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if user.rol == user.EMPRENDEDOR %}
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+            <h2 class="text-2xl font-bold text-black mb-6">Perfil de Emprendedor</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <!-- Left Column -->
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Cargo</label>
+                        <input type="text" value="{{ user.emprendedor_profile.cargo|default_if_none:'no tienes un cargo' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Startup</label>
+                        <input type="text" value="{{ user.emprendedor_profile.startup|default_if_none:'no perteneces a niguna startup' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Grado de instrucción</label>
+                        <input type="email" value="{{ user.emprendedor_profile.grado_instruccion|default_if_none:'Grado de instrucción' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Universidad</label>
+                        <input type="text" value="{{ user.emprendedor_profile.universidad|default_if_none:'Universidad' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Facultad</label>
+                        <input type="text" value="{{ user.emprendedor_profile.facultad|default_if_none:'Facultad' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Escuela</label>
+                        <input type="text" value="{{ user.emprendedor_profile.escuela|default_if_none:'Escuela' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                </div>
+            </div>
+
+        <!-- Interest Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Sector de interés -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class=" text-navy-blue font-bold mb-2">Sector de interés</h3>
+                <ul class="text-black mb-4">
+                    {% for sector in sectores_interes %}
+                    <li>{{ sector }}</li>
+                    {% empty %}
+                    <li>No hay sectores de interés especificados.</li>
+                    {% endfor %}
+                </ul>
+                
+            </div>
+
+            <!-- Habilidades blandas -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class=" text-navy-blue font-bold mb-2">Habilidades blandas</h3>
+                <ul class="text-black mb-4">
+                    {% for habilidad in habilidades_blandas %}
+                    <li>{{ habilidad }}</li>
+                    {% empty %}
+                    <li>No hay habilidades blandas especificadas.</li>
+                    {% endfor %}
+                </ul>
+                
+            </div>
+
+            <!-- Startups seguidas -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-navy-blue font-bold mb-2">Startups Seguidas</h3>
+                <ul class="text-black mb-4">
+                    {% for seguimiento in startups_seguidas %}
+                        <li>
+                            Startup: {{ seguimiento.startup.nombre }} - 
+                            Fecha de seguimiento: {{ seguimiento.fecha_seguimiento|date:"d-m-Y H:i" }}
+                        </li>
+                    {% empty %}
+                        <li>No sigues ninguna startup.</li>
+                    {% endfor %}
+                </ul>
+            </div>  
+        </div>
+      </div>
+
+      {% elif user.rol == user.MENTOR or user.rol == user.SPEAKER%}
+      <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+            <h2 class="text-2xl font-bold text-black mb-6">Perfil de Mentor</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <!-- Left Column -->
+                <div>
+                    <div class="mb-4">
+                        <label class="block  text-navy-blue font-semibold mb-2">Profesión</label>
+                        <input type="text" value="{{ user.mentor_profile.profesion|default_if_none:'profesión' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-blue-900 font-semibold mb-2">Especialidad</label>
+                        <input type="text" value="{{ user.mentor_profile.especialidad|default_if_none:'especialidad' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Empresa a cargo</label>
+                        <input type="text" value="{{ user.mentor_profile.empresa_a_cargo|default_if_none:'empresa' }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-navy-blue font-semibold mb-2">Pertenece a la UNHEVAL</label>
+                        <input type="text" value="{% if user.mentor_profile.pertenece_universidad %}Sí{% else %}No{% endif %}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                    </div>
+                </div>
+            </div>
+
+        <!-- Interest Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Beneficios -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class=" text-navy-blue font-bold mb-2">Beneficios</h3>
+                <ul class="text-black mb-4">
+                    {% for beneficio in user.mentor_profile.beneficios.splitlines %}
+                    <li>{{ beneficio }}</li>
+                    {% empty %}
+                        <li>No hay beneficios especificados.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Sala personal -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-blue-900 font-bold mb-2">Enlace a sala personal de las sesiones virtuales</h3>
+                <div class="flex items-center mb-4">
+                    {% if user.mentor_profile.sala_virtual %}
+                    <a href="{{ user.mentor_profile.sala_virtual }}" 
+                       class="block w-full p-2 text-blue-500 underline bg-blue-50 rounded hover:bg-blue-100 truncate">
+                        {{ user.mentor_profile.sala_virtual }}
+                    </a>
+                    {% else %}
+                        <span class="text-black">No tienes ningún enlace a tu sala personal.</span>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Disponibilidad -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-navy-blue font-bold mb-2">Disponibilidad</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Programa:</label>
+                            <input type="text" value="{{ user.mentor_profile.programa|default:"No asignado" }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                        </div>
+                    </div>
+                    <!-- Right Column -->
+                    <div>
+                        <div class="mb-4">
+                            <label class="block text-navy-blue font-semibold mb-2">Precio por hora:</label>
+                            <input type="text" value="{{ user.mentor_profile.get_precio }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+                        </div>
+                    </div>
+                </div>
+                <label class="block text-navy-blue font-semibold mb-2">Horario:</label>
+                <input type="text" value="{{ user.mentor_profile.disponibilidad|default:"No especificado" }}" disabled class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-blue-gray-400">
+            </div>
+
+             <!-- Mentoría startups -->
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-navy-blue font-bold mb-2">Mentoría de Startups</h3>
+                <ul class="text-black mb-4">
+                    {% for mentoria in mentoria_startups %}
+                        {% if mentoria.estado != 'COMPLETADA' %}
+                            <li>
+                                Startup: {{ mentoria.startup.nombre }} - 
+                                Temas: {{ mentoria.temas }} - 
+                                Fecha: {{ mentoria.fecha|date:"d-m-Y H:i" }} - 
+                                Estado: {{ mentoria.estado }}
+                            </li>
+                        {% endif %}
+                    {% empty %}
+                    <li>No tienes ninguna mentoría asociada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-8 flex justify-center space-x-4">
+        <a href="{% url 'edit-profile' %}" class="inline-flex items-center px-6 py-2 bg-blue-700 text-white rounded-md hover:bg-navy-blue">
+            Editar cuenta <i class="fa-solid fa-user-pen ml-2"></i>
+        </a>
+        <form action="{% url 'eliminar-cuenta' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="bg-red text-white py-2 px-6 rounded-lg flex items-center justify-center">
+                Eliminar cuenta <i class="fa-solid fa-user-minus ml-2"></i>
+            </button>
+        </form>
+    </div>
+  </div>
+</div>
+
+
+{% endblock content %}

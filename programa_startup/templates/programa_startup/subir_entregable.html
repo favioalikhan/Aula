@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-lg mx-auto p-4">
+    <div class="bg-white shadow-md rounded-lg">
+        <div class="flex items-center p-4 border-b border-gray-200">
+            <a href="{{ modulo_page_url }}" class="text-gray-500 hover:text-gray-700">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-2xl font-semibold ml-4">{{ tarea.titulo }}</h1>
+        </div>
+
+        <div class="p-4">
+            <p>User: {{ user }}, Is authenticated: {{ user.is_authenticated }}, Rol: {{ user.rol }}</p>
+<p>Now: {{ now }}, Tarea fecha_entrega: {{ tarea.fecha_entrega }}</p>
+<p>Can upload: {{ can_upload }}</p>
+            <p class="text-gray-700">Descripción: {{ tarea.descripcion }}</p>
+            <p class="text-gray-700">Fecha de inicio: {{ tarea.fecha_inicio }}</p>
+            <p class="text-gray-700">Fecha de entrega: {{ tarea.fecha_entrega }}</p>
+            <p class="text-gray-700">Archivo: 
+                {% if tarea.archivo %}
+                    <a href="{{ tarea.archivo.url }}" download class="text-blue-600 hover:underline">Descargar archivo</a>
+                {% else %}
+                    No disponible
+                {% endif %}
+            </p>
+            <p class="text-gray-700">Tipo: {{ tarea.get_tipo_display }}</p>
+        </div>
+
+        {% if request.user.is_authenticated and request.user.rol == 'emprendedor' %}
+            {% if entregable %}
+                <div class="p-4 border-t border-gray-200">
+                    <h2 class="text-lg font-semibold mb-4">Entregable Subido</h2>
+                    <p class="text-gray-700">Estado: {{ entregable.get_estado_display }}</p>
+                    <p class="text-gray-700">Fecha de envío: {{ entregable.fecha_subida }}</p>
+                    <p class="text-gray-700">
+                        <a href="{{ entregable.archivo.url }}" download class="text-blue-600 hover:underline">Descargar entregable</a>
+                    </p>
+                    <p class="text-gray-700">Calificación: {{ entregable.calificacion }}</p>
+                    <form action="{% url 'borrar-entregable' entregable.pk %}" method="post" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-red text-white py-2 px-4 rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                            Borrar Entregable
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                {% with now=now %}
+                    {% if now <= tarea.fecha_entrega %}
+                        <!-- Formulario para subir una resolución -->
+                        <div class="p-4 border-t border-gray-200">
+                            <h2 class="text-lg font-semibold mb-4">Subir Resolución</h2>
+                            <form action="{% url 'subir-entregable' tarea.pk %}" method="post" enctype="multipart/form-data" class="space-y-4">
+                                {% csrf_token %}
+                                {{ form.as_p }}
+                                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                                    Subir
+                                </button>
+                            </form>
+                        </div>
+                    {% elif now > tarea.fecha_entrega %}
+                        <p class="text-red-600 p-4">La fecha de entrega ha pasado. No se puede subir un archivo.</p>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% debug %}
+{% load wagtailcore_tags wagtailimages_tags %}
+{% load static %}
+
+{% block body_class %}template-programa{% endblock %}
+{% block content %}
+    
+<div class="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4 mb-8 px-4 py-8 lg:px-48 lg:py-16">
+        <!-- Programa Image (primera columna) -->
+        <div class="md:row-span-2 flex justify-center mb-8 items-center">
+            {% if page.imagen %}
+                {% image page.imagen original %}
+            {% else %}
+                <p>No hay imagen asignada.</p>
+            {% endif %}
+        </div>
+    
+        <!-- Programa Description (segunda columna) -->
+        <div class="md:row-span-2 flex justify-center mb-8 items-center">
+            <p class="text-lg text-gray-700">
+                {{ page.descripcion|richtext }}
+            </p>
+        </div>
+    
+    <!-- Main Grid -->
+        <!-- Beneficios Block -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-center mb-4">Beneficios</h2>
+            <ul class="space-y-4">
+                {% for beneficio in page.beneficios.all %}
+                <li class="flex items-center">
+                    {% if beneficio.imagen %}
+                    {% image beneficio.imagen original %}
+                    {% endif %}
+                    <div>
+                        <h3 class="font-medium">{{ beneficio.descripcion }}</h3>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- Cronograma Block -->
+         
+        <!-- Requisitos Block -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-center mb-4">Cronograma</h2>
+            {% for cronograma in page.cronograma.all %}
+            <ul class="space-y-2 text-gray-700">
+                {% for item in cronograma.items.all %}
+                <li class="flex items-center">
+                    {% if item.imagen %}
+                    {% image item.imagen original %}
+                    {% endif %}
+                    <div>
+                        <h3 class="font-medium">{{ item.nombre_proceso }}</h3>
+                        <p class="text-gray-600 text-sm">{{ item.fecha_inicio }} - {{ item.fecha_fin }}</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="text-sm text-gray-500 mt-4">
+                Modalidad: {{ cronograma.modalidad }}<br>
+                Frecuencia de clase: {{ cronograma.frecuencia }}
+            </p>
+        
+        {% endfor %}
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-center mb-4">Requisitos</h2>
+            <div class="space-y-2 text-gray-700">
+                {{ page.requisitos|richtext }}
+            </div>
+        </div>
+
+        <!-- Criterios de Evaluación Block -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-center mb-4">Criterios de Evaluación</h2>
+            <ul class="space-y-4">
+                {% for criterio in page.criterios.all %}
+                <div class="flex items-center">
+                    {% if criterio.imagen %}
+                    {% image criterio.imagen original  %}
+                    {% endif %}
+                    <div>
+                        <h3 class="font-medium">{{ criterio.descripcion }}</h3>
+                    </div>
+                </div>
+                {% endfor %}
+            </ul>
+        </div>
+    <!-- Conditional Buttons -->
+    {% if user.is_authenticated %}
+    {% if user.rol == user.MENTOR or user.rol == user.SPEAKER %}
+        <div class="col-span-1 md:col-span-2 text-center mt-8">
+            <a href="{% url 'programa-modulo' page.slug %}" class="bg-green w-full text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition">
+                Ver Módulos
+            </a>
+        </div>
+    {% elif user.rol == user.EMPRENDEDOR and user.emprendedor_profile.startup and user.emprendedor_profile.cargo == 'Founder' %}
+        {% if user.emprendedor_profile.startup.programa == page %}
+            <div class="col-span-1 md:col-span-2 text-center mt-8">
+                <a href="{% url 'programa-modulo' page.slug %}" class="bg-green w-full text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition">
+                    Ver Módulos
+                </a>
+            </div>
+        {% else %}
+            <div class="col-span-1 md:col-span-2 text-center mt-8">
+                <a href="{% url 'inscribir-startup' page.id %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">
+                    Inscribirse
+                </a>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+       
+</div> 
+{% endblock content %}

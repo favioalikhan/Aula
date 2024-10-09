@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% load static %}
+{% load wagtailcore_tags wagtailimages_tags %}
+{% block content %}
+{% block footer %}{% endblock %}
+<div class="flex justify-center items-center h-16 bg-navy-blue">
+    <h1 class="text-2xl font-bold text-center text-white">Perfil de Startup {{ startup.nombre }}</h1>
+</div>
+<div class="container mx-auto mt-8">
+    <div class="container mx-auto p-4">
+        <div class="bg-white p-6 rounded-lg shadow-md grid gap-6 items-center {% if user.rol == user.EMPRENDEDOR %}md:grid-cols-3{% else %}md:grid-cols-2{% endif %}">
+                <div class="flex flex-col items-center">
+                        <div class="relative group">
+                            <div class="relative">
+                                {% if startup.logo %}
+                                    <img src="{{ startup.logo.url }}" alt="Logo de {{ startup.nombre }}" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                                {% else %}
+                                    <img src="{% static 'img/default-startup.png' %}" alt="Logo predeterminado" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-semibold text-black mt-5 text-center">{{ startup.nombre }}</h1>
+                        </div>
+                </div>
+                    <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+                        <h2 class="text-lg font-semibold mb-4">Descripción</h2>
+                        {% if startup.descripcion %}
+                        <textarea disabled class="w-full h-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none" rows="5">{{ startup.descripcion }}</textarea>
+                        {% else %}
+                            Falta su resumen de perfil
+                        {% endif %} 
+                    </div>
+                    <div class="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md">
+                        <h2 class="text-lg font-semibold mb-4">Progreso</h2>
+                        {% if startup.programa%}
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold">{{ startup.programa}}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ progreso }}%"></div>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>0</span>
+                                    <span class="font-bold">{{ progreso }}%</span>
+                                    <span>100</span>
+                                </div>
+                            </div>
+                        {% else %}
+                        <span class="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold">No estás inscrito en un programa</span>
+                        {% endif %}
+                    </div>
+        </div>
+
+            <div class="bg-white shadow rounded-lg overflow-hidden mt-8">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold mb-4">Datos de la Startup</h2>
+                    <div class="border-b border-gray-200">
+                        <nav class="flex -mb-px">
+                            <a href="#modelo" class="tab-link border-b-2 border-blue-500 text-blue-600 px-4 py-2 text-sm font-medium" data-tab="modelo">Modelo de Negocio</a>
+                            <a href="#integrantes" class="tab-link text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium" data-tab="integrantes">Integrantes</a>
+                            <a href="#mentoria" class="tab-link  text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium"  data-tab="mentoria">Mentoría</a>
+                            <a href="#logros" class="tab-link  text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium" data-tab="logros">Logros</a>
+                        </nav>
+                    </div>
+                    <div id="modelo" class="tab-content mt-6 space-y-4">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Problemática</h3>
+                                <p>{{ startup.problematica|linebreaks }}</p>
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Propuesta de Valor</h3>
+                                <p>{{ startup.propuesta_valor|linebreaks }}</p>
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Público Objetivo</h3>
+                                <p>{{ startup.publico_objetivo|linebreaks }}</p>
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Socios Clave</h3>
+                                <p>{{ startup.socios_clave|linebreaks }}</p>
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Canales</h3>
+                                <p>{{ startup.canales|linebreaks }}</p>
+                            </div>
+                            <div class="bg-white shadow rounded-lg p-4">
+                                <h3 class="text-md font-semibold mb-2">Producto o Servicio</h3>
+                                <p>{{ startup.producto_servicio|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+            <div id="integrantes" class="tab-content mt-6 space-y-4 hidden">
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% if integrantes %}
+                            {% for integrante in integrantes %}
+                                <div class="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                                    <span>{{ integrante.usuario.username }} - {{ integrante.cargo }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No hay integrantes en esta startup.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div id="mentoria" class="tab-content mt-6 space-y-4 hidden">
+                <div class="p-6">
+                    {% if startup.mentoria_set.exists %}
+                        <div class="space-y-4">
+                            {% for mentoria in startup.mentoria_set.all %}
+                                {% if mentoria.estado != 'COMPLETADA' %}
+                                    <div class="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                                        <div>
+                                            <p>Mentor: {{ mentoria.mentor.user.username }}</p>
+                                                <a href="{{ mentoria.mentor.sala_virtual }}" 
+                                                class="block w-80 p-2 text-blue-500 underline bg-blue-50 rounded hover:bg-blue-100 truncate">
+                                                    {{ mentoria.mentor.sala_virtual }}
+                                                </a>
+                                            <p class="text-sm text-gray-600">Especialidad: {{ mentoria.mentor.especialidad|default:"Sin especialidad" }}</p>
+                                            <p class="text-sm text-gray-600">Disponibilidad: {{ mentoria.mentor.disponibilidad|default:"Sin disponibilidad" }}</p>
+                                            <p class="text-sm text-gray-600">Fecha: {{ mentoria.fecha|date:"d-m-Y H:i" }} - Estado: {{ mentoria.estado }}</p>
+                                        </div>
+                                    </div>
+                                {%endif%}
+                                <p>No tienes ninguna mentoría asociada.</p>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>No hay mentorías asociadas a esta startup.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="logros" class="tab-content mt-6 space-y-4 hidden">
+                <div class="p-6">
+                    {% if logros %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {% for logro in logros %}
+                            <div class="p-4 bg-gray-100 rounded-lg shadow-sm">
+                                <h3 class="text-lg font-semibold">{{ logro.titulo }}</h3>
+                                <textarea disabled class="w-full h-auto p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none" rows="7">{{ logro.descripcion }}</textarea>
+                                <p class="text-sm text-gray-600">Fecha: {{ logro.fecha_logro|date:"d-m-Y" }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                        {% else %}
+                            <p>No hay logros asociados a esta startup.</p>
+                        {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+            <div class="grid gap-6 md:grid-cols-3">
+                <div class="bg-white shadow rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                        </svg>
+                        Hitos completados
+                    </h3>
+                    <div class="flex items-center justify-center">
+                        <div class="relative w-24 h-24">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle class="text-gray-200" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                                <circle class="text-blue-600" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" stroke-dasharray="283" stroke-dashoffset="{{ hitos_count}}" />
+                            </svg>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <p class="text-3xl font-bold">{{hitos_count}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white shadow rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Seguidores
+                    </h3>
+                    <p class="flex justify-center items-center text-center text-4xl font-bold h-full w-full">{{ startup.seguidores_startup.count }}</p>
+                </div>
+                <div class="bg-white shadow rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Programa actual
+                    </h3>
+                    <div class="flex justify-center items-center h-24">
+                        {% if startup.programa.imagen %}
+                            {% image startup.programa.imagen original %}
+                        {% else %}
+                            <p>No hay imagen asignada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-center space-x-4">
+                {% if user.rol == user.EMPRENDEDOR and user.emprendedor_profile.cargo == 'Founder' %}
+                    <a href="{% url 'edit-profile-startup' %}" class="bg-blue-600 text-white py-2 px-6 rounded-lg flex items-center justify-center">
+                        Editar startup <i class="fa-sharp fa-solid fa-rocket-launch ml-2" style="color: #ffffff;"></i>
+                    </a>
+                    <form method="post" action="{% url 'eliminar-startup' startup.id %}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta startup?');">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-red text-white py-2 px-6 rounded-lg flex items-center justify-center">
+                            Eliminar startup <i class="fa-sharp fa-solid fa-rocket ml-2" style="color: #ffffff;"></i>
+                        </button>
+                    </form>
+                {% else%}
+                <a href="{% url 'salir-startup' startup.id %}" class="bg-red text-white py-2 px-6 rounded-lg flex items-center justify-center">
+                    Salir de la startup <i class="fa-sharp fa-solid fa-door-open ml-2" style="color: #ffffff;"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+   </div>
+</div>
+
+<!-- Incluye el JavaScript para manejar las pestañas -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Función para manejar el cambio de pestañas
+        function switchTab(tabId) {
+            // Ocultar todos los contenidos de las pestañas
+            tabContents.forEach(content => content.classList.add('hidden'));
+
+            // Mostrar el contenido de la pestaña seleccionada
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        // Inicializar la pestaña activa
+        const defaultTab = 'modelo'; // Cambia esto si quieres que otra pestaña esté activa por defecto
+        switchTab(defaultTab);
+
+        // Manejar clics en las pestañas
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Obtener el ID de la pestaña a mostrar
+                const tabId = this.getAttribute('data-tab');
+
+                // Cambiar la pestaña
+                switchTab(tabId);
+
+                // Actualizar los estilos de los enlaces de las pestañas
+                tabLinks.forEach(l => {
+                    l.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                    l.classList.add('text-gray-500', 'hover:text-gray-700');
+                });
+                this.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                this.classList.remove('text-gray-500', 'hover:text-gray-700');
+            });
+        });
+    });
+</script>
+
+{% endblock content %}
