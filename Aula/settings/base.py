@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from datetime import timedelta
+
+# from datetime import timedelta
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
@@ -26,7 +30,11 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 INSTALLED_APPS = [
     # extra
+    "usuarios",
+    # "usuarios.apps.UsuariosConfig",
+    # "usuarios.apps.CustomWagtailUsersConfig",
     "dashboard",
+    "modeltranslation",
     "unfold",
     "unfold.contrib.filters",
     "unfold.contrib.forms",
@@ -37,18 +45,20 @@ INSTALLED_APPS = [
     "django_browser_reload",
     "tailwind",
     "theme",
-    "rest_framework",
-    "rest_framework_simplejwt",
-    # ------
+    # "rest_framework",
+    # "rest_framework_simplejwt",
     "home",
     "search",
+    # "usuarios.apps.UsuariosConfig",
+    # ------------
     "wagtail.contrib.frontend_cache",
     "wagtail.contrib.settings",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",
     "wagtail.sites",
-    "wagtail.users",
+    # "wagtail.users",
+    # "usuarios.apps.CustomWagtailUsersConfig",
     "wagtail.snippets",
     "wagtail.documents",
     "wagtail.images",
@@ -63,24 +73,38 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Apps
-    "base",
-    "usuarios",
-    "programa_startup",
+    "whitenoise.runserver_nostatic",
+    # "debug_toolbar",
+    "import_export",
+    "guardian",
+    "simple_history",
+    "django_celery_beat",
+    "djmoney",
     # ------
+    # ------ Apps
+    # "usuarios",
+    "Aula",
+    "base",
+    "programa_startup",
 ]
+WAGTAIL_ADMIN_BASE_URL = None
 
 MIDDLEWARE = [
+    # "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 ROOT_URLCONF = "Aula.urls"
@@ -90,6 +114,7 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.join(PROJECT_DIR, "templates"),
+            os.path.join(BASE_DIR, "dashboard/templates"),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -190,7 +215,129 @@ STORAGES = {
     },
 }
 
+######################################################################
+# Unfold
+######################################################################
 
+UNFOLD = {
+    "SITE_HEADER": _("Aula Admin"),
+    "SITE_TITLE": _("Aula Admin"),
+    "SITE_SYMBOL": "settings",
+    # "SHOW_HISTORY": True,
+    "ENVIRONMENT": "Aula.utils.environment_callback",
+    "DASHBOARD_CALLBACK": "Aula.views.dashboard_callback",
+    "LOGIN": {
+        "image": lambda request: static("img/incuval-admin.png"),
+    },
+    # "STYLES": [
+    # lambda request: static("css/dist/styles.css"),
+    # ],
+    "SCRIPTS": [
+        # lambda request: static("js/chart.min.js"),
+    ],
+    "TABS": [
+        {
+            "models": ["usuarios.CustomUser", "auth.group"],
+            "items": [
+                {
+                    "title": _("Users"),
+                    "icon": "person",
+                    "link": reverse_lazy("aula_admin:usuarios_customuser_changelist"),
+                },
+                {
+                    "title": _("Groups"),
+                    "icon": "group",
+                    "link": reverse_lazy("aula_admin:auth_group_changelist"),
+                },
+            ],
+        },
+    ],
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                # "title": _("Navigation"),
+                # "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Dashboard"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("aula_admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": _("Usuarios y Grupos"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Users"),
+                        "icon": "person",
+                        "link": reverse_lazy(
+                            "aula_admin:usuarios_customuser_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Groups"),
+                        "icon": "group",
+                        "link": reverse_lazy("aula_admin:auth_group_changelist"),
+                    },
+                    {
+                        "title": _("Emprendedores"),
+                        "icon": "business",
+                        "link": reverse_lazy(
+                            "aula_admin:usuarios_emprendedor_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Mentores"),
+                        "icon": "supervisor_account",
+                        "link": reverse_lazy("aula_admin:usuarios_mentor_changelist"),
+                    },
+                ],
+            },
+            {
+                "items": [
+                    {
+                        "title": _("Mentorías"),
+                        "icon": "question_answer",
+                        "link": reverse_lazy("aula_admin:usuarios_mentoria_changelist"),
+                    }
+                ]
+            },
+            {
+                "items": [
+                    {
+                        "title": _("Startups"),
+                        "icon": "rocket",
+                        "link": reverse_lazy(
+                            "aula_admin:programa_startup_startup_changelist"
+                        ),
+                    }
+                ]
+            },
+            {
+                "title": _("Gestión de contenido CMS"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Editor de contenido"),
+                        "icon": "edit",
+                        "link": reverse_lazy("wagtailadmin_home"),
+                    },
+                    {
+                        "title": _("Documentos"),
+                        "icon": "folder",
+                        "link": reverse_lazy("wagtaildocs:index"),
+                    },
+                ],
+            },
+        ],
+    },
+}
+
+######################################################################
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "Aula"
@@ -299,7 +446,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
-# ----------------JWT---------------------
+# ----------------JWT-----------------UTILIZAR A FUTURO----
+"""
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=3),
     "REFRESH_TOKEN_LIFETIME": timedelta(minutes=5),
@@ -318,17 +466,20 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(minutes=1),
 }
+"""
 # -----------------------SESSIONS--------------------------------
 
 AUTHENTICATION_BACKENDS = [
     "usuarios.backends.EmailBackend",
     "django.contrib.auth.backends.ModelBackend",
+    "guardian.backends.ObjectPermissionBackend",
 ]
 AUTH_USER_MODEL = "usuarios.CustomUser"
 LOGIN_REDIRECT_URL = "/"
 SESSION_COOKIE_SECURE = True  # Solo para HTTPS
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+# SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 
 CSRF_COOKIE_SAMESITE = "Strict"

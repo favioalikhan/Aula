@@ -1,0 +1,109 @@
+{% extends 'unfold/layouts/base_simple.html' %}
+{% load i18n unfold %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block title %}
+    {% trans 'Dashboard' %} | {{ site_title|default:_('Django site admin') }}
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            {{ site_header }}
+        </a>
+    </h1>
+{% endblock %}
+
+{% block extrahead %}
+    {% if plausible_domain %}
+        <script defer data-domain="{{ plausible_domain }}" src="https://plausible.io/js/script.js"></script>
+    {% endif %}    
+{% endblock %}
+ 
+{% block content %}
+    {% include "unfold/helpers/messages.html" %}
+    
+    {% component "unfold/components/container.html" %}
+        {% component "unfold/components/flex.html" with class="gap-4" %}
+            {% component "unfold/components/navigation.html" with items=navigation %}{% endcomponent %}
+
+            {% component "unfold/components/navigation.html" with class="ml-auto" items=filters %}{% endcomponent %}
+        {% endcomponent %}
+
+        {% component "unfold/components/flex.html" with class="gap-8 mb-8 flex-col lg:flex-row" %}
+            {% for stats in kpi %}
+                {% component "unfold/components/card.html" with class="lg:w-1/3" label=label footer=stats.footer %}
+                    {% component "unfold/components/text.html" %}
+                        {{ stats.title }}
+                    {% endcomponent %}   
+
+                    {% component "unfold/components/title.html" %}
+                        {{ stats.metric }}
+                    {% endcomponent %}                                  
+                {% endcomponent %}
+            {% endfor %}
+        {% endcomponent %}
+        {% trans "Tendencias de mentorías" as title %}
+        {% component "unfold/components/card.html" with class="mb-8" title=title %}
+            {% component "unfold/components/chart/bar.html" with data=chart height=320 %}{% endcomponent %}
+        {% endcomponent %}
+
+        {% component "unfold/components/flex.html" with class="gap-8 mb-8 flex-col lg:flex-row" %}
+            {% trans "Progreso de las startups" as title %}
+            {% component "unfold/components/card.html" with class="lg:w-1/2" title=title %}            
+                {% component "unfold/components/flex.html" with col=1 class="gap-5" %}
+                    {% for metric in progress %}
+                        {% component "unfold/components/progress.html" with title=metric.title|safe description=metric.description value=metric.value %}{% endcomponent %}
+                    {% endfor %}
+
+                    {% if total_pages > 1 %}
+                        <div class="flex justify-center items-center space-x-2 mt-4">
+                            {% if has_previous %}
+                                <a href="?page={{ current_page|add:'-1' }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                                    ←
+                                </a>
+                            {% endif %}
+                            
+                            {% for page_num in page_range %}
+                                {% if page_num == current_page %}
+                                    <span class="px-3 py-1 bg-blue-500 text-white rounded">
+                                        {{ page_num }}
+                                    </span>
+                                {% elif page_num == "…" %}
+                                    <span class="px-3 py-1">...</span>
+                                {% else %}
+                                    <a href="?page={{ page_num }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                                        {{ page_num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if has_next %}
+                                <a href="?page={{ current_page|add:'1' }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                                    →
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endcomponent %}
+            {% endcomponent %}    
+
+            {% component "unfold/components/flex.html" with class="gap-8 lg:w-1/2" col=1 %}
+                {% for stats in performance %}
+                    {% component "unfold/components/card.html" %}
+                        {% component "unfold/components/text.html" %}
+                            {{ stats.title }}
+                        {% endcomponent %}   
+
+                        {% component "unfold/components/title.html" with class="mb-8" %}
+                            {{ stats.metric }}
+                        {% endcomponent %}                                  
+
+                        {% component "components/chart/doughnut.html" with data=stats.chart %}{% endcomponent %}
+                    {% endcomponent %}
+                {% endfor %}                                
+            {% endcomponent %}        
+        {% endcomponent %}    
+    {% endcomponent %}
+{% endblock %}

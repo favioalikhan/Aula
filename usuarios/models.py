@@ -48,6 +48,12 @@ class CustomUser(AbstractUser):
         (MENTOR, "Mentor"),
         (SPEAKER, "Speaker"),
     ]
+
+    GENDER_CHOICES = [
+        ("M", "Masculino"),
+        ("F", "Femenino"),
+        ("O", "Otro"),
+    ]
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -60,7 +66,9 @@ class CustomUser(AbstractUser):
     apellido_materno = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     celular = models.CharField(max_length=20, blank=True, null=True)
-    genero = models.CharField(max_length=10, blank=True, null=True)
+    genero = models.CharField(
+        max_length=1, choices=GENDER_CHOICES, blank=True, null=True
+    )
     rol = models.CharField(max_length=50, choices=ROLE_CHOICES, default=EMPRENDEDOR)
     ocupacion = models.CharField(max_length=100, blank=True, null=True)
     fecha_nacimiento = models.DateField(blank=True, null=True)
@@ -73,6 +81,14 @@ class CustomUser(AbstractUser):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Definimos los getters y setters dinámicamente
+        type(self).first_name = property(
+            lambda self: self.username,
+            lambda self, value: setattr(self, "username", value),
+        )
 
     def __str__(self):
         return self.email

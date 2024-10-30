@@ -2,8 +2,14 @@ from django.urls import path
 from .views import EditProfile, SolicitarMentoriaView, CustomLoginView
 from django.contrib.auth import views as auth_views
 from . import views
+from .viewsets import CustomAccountView
 
 urlpatterns = [
+    path(
+        "account/",
+        CustomAccountView.as_view(),
+        name="wagtailadmin_account",
+    ),
     path(
         "login/",
         CustomLoginView.as_view(template_name="usuarios/login.html"),

@@ -576,8 +576,8 @@ class IntegranteStartup(models.Model):
                 fields=["usuario", "startup"], name="unique_usuario_startup"
             )
         ]
-        verbose_name = "Usuario-Startup"
-        verbose_name_plural = "Usuarios-Startups"
+        verbose_name = "Integrante de la Startup"
+        verbose_name_plural = "Integrantes de la Startup"
 
 
 # logro

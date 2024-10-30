@@ -5,3 +5,11 @@ django-browser-reload
 django-tailwind
 djangorestframework-simplejwt
 sendgrid
+django-money
+django-simple-history
+django-celery-beat
+django-guardian
+django-import-export
+django-modeltranslation
+whitenoise
+django-debug-toolbar

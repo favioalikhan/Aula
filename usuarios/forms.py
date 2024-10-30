@@ -6,6 +6,49 @@ from django.contrib.auth.forms import (
 )
 from .models import CustomUser, Emprendedor, Mentor, Mentoria
 from .widgets import CustomProfileImageWidget
+from django.contrib.auth import get_user_model
+
+
+class CustomUserSettingsForm(forms.ModelForm):
+    class Meta:
+        model = get_user_model()
+        fields = [
+            "username",
+            "email",
+            "apellido_paterno",
+            "apellido_materno",
+            "dni",
+            "celular",
+            "genero",
+            "ocupacion",
+            "fecha_nacimiento",
+            "foto_perfil",
+            "red_social",
+        ]
+        labels = {
+            "username": "Nombre",
+            "apellido_paterno": "Apellido Paterno",
+            "apellido_materno": "Apellido Materno",
+            "email": "Correo electrónico",
+            "dni": "DNI",
+            "celular": "Celular",
+            "genero": "Género",
+            "ocupacion": "Ocupación",
+            "fecha_nacimiento": "Fecha de nacimiento",
+            "foto_perfil": "Foto de perfil",
+            "red_social": "Red social",
+        }
+        widgets = {
+            "fecha_nacimiento": forms.DateInput(attrs={"type": "date"}),
+            "genero": forms.Select(
+                choices=[
+                    ("", "Seleccione género"),
+                    ("M", "Masculino"),
+                    ("F", "Femenino"),
+                    ("O", "Otro"),
+                ]
+            ),
+        }
 
 
 class CustomAuthenticationForm(AuthenticationForm):
@@ -55,12 +98,9 @@ class CustomUserCreationForm(UserCreationForm):
             }
         ),
     )
+
     genero = forms.ChoiceField(
-        choices=[
-            ("Masculino", "Masculino"),
-            ("Femenino", "Femenino"),
-            ("Otro", "Otro"),
-        ],
+        choices=[("", "Seleccione género")] + CustomUser.GENDER_CHOICES,
         required=True,
         widget=forms.Select(
             attrs={
