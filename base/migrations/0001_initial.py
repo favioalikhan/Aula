@@ -15,7 +15,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('wagtailcore', '0094_alter_page_locale'),
-        ('wagtailcore', '0095_userprofile'),
     ]
 
     operations = [
