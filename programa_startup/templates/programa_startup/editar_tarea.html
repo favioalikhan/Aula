@@ -2,83 +2,105 @@
 {% load static %}
 {% block content %}
 
-<div class="max-w-lg mx-auto p-4">
+<div class="max-w-md mx-auto p-4">
     <div class="bg-white shadow-md rounded-lg">
+        <!-- Header con botón de volver usando modulo_page_url -->
         <div class="flex items-center p-4 border-b border-gray-200">
             <a href="{{ modulo_page_url }}" class="text-gray-500 hover:text-gray-700">
                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </a>
-            <h1 class="text-2xl font-semibold ml-4">Editar Tarea: {{ tarea.titulo }}</h1>
+            <h1 class="text-2xl font-semibold ml-4">Editar Tarea - {{ tarea.titulo }}</h1>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="p-4 space-y-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% endif %} rounded-md">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Formulario -->
+        <form method="POST" action="{% url 'editar-tarea' tarea.id %}" enctype="multipart/form-data" class="p-4 space-y-4">
             {% csrf_token %}
+            
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ field.label }}:
+                    </label>
+                    <div class="mt-1">
+                        {% if field.name == 'descripcion' %}
+                            <textarea 
+                                name="{{ field.name }}" 
+                                id="{{ field.id_for_label }}"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                rows="3"
+                            >{{ field.value|default:'' }}</textarea>
+                        {% elif field.name == 'tipo' or field.name == 'bloqueado' %}
+                            <select 
+                                name="{{ field.name }}" 
+                                id="{{ field.id_for_label }}"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                            >
+                                {% for choice in field.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if field.value == choice.0 %}selected{% endif %}>
+                                        {{ choice.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% elif field.name == 'archivo' %}
+                            <input 
+                                type="file" 
+                                name="{{ field.name }}" 
+                                id="{{ field.id_for_label }}"
+                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:rounded-md file:text-sm file:font-medium file:bg-gray-50 hover:file:bg-gray-100"
+                            >
+                            {% if tarea.archivo %}
+                                <p class="mt-2 text-sm text-gray-500">Archivo actual: <a href="{{ tarea.archivo.url }}" class="text-blue-600 hover:underline">Descargar</a></p>
+                            {% endif %}
+                        {% elif field.name == 'fecha_entrega' %}
+                            <input 
+                                type="datetime-local" 
+                                name="{{ field.name }}" 
+                                id="{{ field.id_for_label }}"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                value="{{ field.value|date:'Y-m-d\TH:i' }}"
+                            >
+                        {% else %}
+                            <input 
+                                type="text" 
+                                name="{{ field.name }}" 
+                                id="{{ field.id_for_label }}"
+                                value="{{ field.value|default:'' }}"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                {% if field.field.required %}required{% endif %}
+                            >
+                        {% endif %}
+                    </div>
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    {% if field.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
 
-            <!-- Campo de título -->
-            <div>
-                <label for="titulo" class="block text-sm font-medium text-gray-700">Título:</label>
-                <input type="text" id="titulo" name="titulo" value="{{ form.titulo.value }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+            <!-- Información adicional usando programa_slug -->
+            <div class="mt-4 text-sm text-gray-500">
+                Programa: {{ programa_slug }}
             </div>
 
-            <!-- Campo de descripción -->
-            <div>
-                <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ form.descripcion.value }}</textarea>
-            </div>
-
-            <!-- Campo de fecha de entrega -->
-            <div>
-                <label for="fecha_entrega" class="block text-sm font-medium text-gray-700">Fecha de Entrega:</label>
-                <input type="datetime-local" id="fecha_entrega" name="fecha_entrega" value="{{ form.fecha_entrega.value|date:'Y-m-d\TH:i' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-            </div>
-
-            <!-- Campo de archivo -->
-            <div>
-                <label for="archivo" class="block text-sm font-medium text-gray-700">Archivo:</label>
-                <input type="file" id="archivo" name="archivo" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:rounded-md file:text-sm file:font-medium file:bg-gray-50 hover:file:bg-gray-100">
-                {% if tarea.archivo %}
-                    <p class="mt-2 text-sm text-gray-500">Archivo actual: <a href="{{ tarea.archivo.url }}" class="text-blue-600 hover:underline">Descargar</a></p>
-                {% endif %}
-            </div>
-
-            <!-- Campo de tipo -->
-            <div>
-                <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo:</label>
-                <select id="tipo" name="tipo" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    <option value="lectura" {% if form.tipo.value == 'lectura' %}selected{% endif %}>Lectura</option>
-                    <option value="practica" {% if form.tipo.value == 'practica' %}selected{% endif %}>Práctica</option>
-                    <!-- Añadir más opciones según sea necesario -->
-                </select>
-            </div>
-
-            <!-- Campo de bloqueado -->
-            <div>
-                <label for="bloqueado" class="block text-sm font-medium text-gray-700">Bloqueado:</label>
-                <select id="bloqueado" name="bloqueado" required
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    <option value="si" {% if form.bloqueado.value == 'si' %}selected{% endif %}>Sí</option>
-                    <option value="no" {% if form.bloqueado.value == 'no' %}selected{% endif %}>No</option>
-                </select>
-            </div>
-
-            <!-- Botón para guardar cambios -->
-            <div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    Guardar Cambios
-                </button>
-            </div>
-        </form>
-
-        <!-- Botón para eliminar tarea -->
-        <form method="POST" action="{% url 'eliminar-tarea' tarea.id %}" class="p-4">
-            {% csrf_token %}
-            <button type="submit" class="w-full bg-red text-white py-2 px-4 rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                Eliminar Tarea
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Guardar Cambios
             </button>
         </form>
     </div>
 </div>
-    
+
 {% endblock content %}

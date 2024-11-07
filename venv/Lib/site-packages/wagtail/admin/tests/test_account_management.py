@@ -1,6 +1,6 @@
 import unittest
 
-import pytz
+import zoneinfo
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import views as auth_views
@@ -232,6 +232,7 @@ class TestAccountSectionUtilsMixin:
             "locale-current_time_zone": "Europe/London",
             "theme-theme": "dark",
             "theme-density": "default",
+            "theme-contrast": "system",
         }
         post_data.update(extra_post_data)
         return self.client.post(reverse("wagtailadmin_account"), post_data)
@@ -244,6 +245,7 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
     def setUp(self):
         self.user = self.login()
+        get_available_admin_time_zones.cache_clear()
 
     def test_account_view(self):
         """
@@ -479,7 +481,7 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
         response = self.client.get(reverse("wagtailadmin_home"))
         self.assertContains(
             response,
-            '<html lang="es" dir="ltr" class="w-theme-dark w-density-default">',
+            '<html lang="es" dir="ltr" class="w-theme-dark w-density-default w-contrast-system">',
         )
 
     def test_unset_language_preferences(self):
@@ -567,7 +569,10 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
 
     @unittest.skipUnless(settings.USE_TZ, "Timezone support is disabled")
     def test_available_admin_time_zones_by_default(self):
-        self.assertListEqual(get_available_admin_time_zones(), pytz.common_timezones)
+        self.assertListEqual(
+            get_available_admin_time_zones(),
+            sorted(zoneinfo.available_timezones()),
+        )
 
     @unittest.skipUnless(settings.USE_TZ, "Timezone support is disabled")
     @override_settings(WAGTAIL_USER_TIME_ZONES=["Europe/London"])
@@ -605,6 +610,21 @@ class TestAccountSection(WagtailTestUtils, TestCase, TestAccountSectionUtilsMixi
         profile.refresh_from_db()
 
         self.assertEqual(profile.theme, "light")
+
+    def test_change_contrast_post(self):
+        response = self.post_form(
+            {
+                "theme-contrast": "more_contrast",
+            }
+        )
+
+        # Check that the user was redirected to the account page
+        self.assertRedirects(response, reverse("wagtailadmin_account"))
+
+        profile = UserProfile.get_for_user(self.user)
+        profile.refresh_from_db()
+
+        self.assertEqual(profile.contrast, "more_contrast")
 
     def test_change_density_post(self):
         response = self.post_form(

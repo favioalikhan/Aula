@@ -40,8 +40,8 @@ class TestModelViewSetGroup(WagtailTestUtils, TestCase):
             response,
             '"name": "tests", "label": "Tests", "icon_name": "folder-open-inverse"',
         )
-        # Title-cased from verbose_name_plural
-        self.assertContains(response, "Json Stream Models")
+        # Capitalized-first from verbose_name_plural
+        self.assertContains(response, "JSON stream models")
         self.assertContains(response, reverse("streammodel:index"))
         self.assertEqual(reverse("streammodel:index"), "/admin/streammodel/")
         # Set on class
@@ -81,7 +81,7 @@ class TestModelViewSetGroup(WagtailTestUtils, TestCase):
         )
 
         # The menu item for the model is shown
-        self.assertContains(response, "Json Stream Models")
+        self.assertContains(response, "JSON stream models")
         self.assertContains(response, reverse("streammodel:index"))
         self.assertEqual(reverse("streammodel:index"), "/admin/streammodel/")
 
@@ -451,6 +451,7 @@ class TestSearchIndexView(WagtailTestUtils, TestCase):
 
     def test_search_disabled(self):
         response = self.get("fctoy_alt1", {"q": "ork"})
+        self.assertFalse(response.context.get("search_form"))
         self.assertContains(response, "Forky")
         self.assertContains(response, "Buzz Lightyear")
         self.assertNotContains(response, "There are 2 matches")
@@ -1043,6 +1044,11 @@ class TestHistoryView(WagtailTestUtils, TestCase):
         for rendered_row, expected_row in zip(rendered_rows, expected):
             self.assertSequenceEqual(rendered_row, expected_row)
 
+        # History view is not searchable
+        input = soup.select_one("input#id_q")
+        self.assertIsNone(input)
+        self.assertFalse(response.context.get("search_form"))
+
     def test_action_filter(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -1235,11 +1241,21 @@ class TestUsageView(WagtailTestUtils, TestCase):
         link = tds[0].select_one("a")
         self.assertIsNotNone(link)
         self.assertEqual(link.attrs.get("href"), tbx_edit_url)
+        content_path_link = tds[-1].select_one("a")
+        self.assertEqual(
+            content_path_link.attrs.get("href"),
+            tbx_edit_url + "#:w:contentpath=cascading_toy",
+        )
 
         # Link to referrer's edit view with parameters for the specific field
         link = tds[2].select_one("a")
         self.assertIsNotNone(link)
         self.assertIn(tbx_edit_url, link.attrs.get("href"))
+
+        # Usage view is not searchable
+        input = soup.select_one("input#id_q")
+        self.assertIsNone(input)
+        self.assertFalse(response.context.get("search_form"))
 
     def test_usage_without_permission(self):
         self.user.is_superuser = False
@@ -1816,4 +1832,40 @@ class TestDefaultMessages(WagtailTestUtils, TestCase):
         self.assertContains(
             response,
             escape(f"Feature complete toy '{self.object}' deleted."),
+        )
+
+
+class TestHeaderButtons(WagtailTestUtils, TestCase):
+    def setUp(self):
+        self.user = self.login()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.object = FeatureCompleteToy.objects.create(name="Test Toy")
+        cls.edit_url = reverse(
+            "feature_complete_toy:edit", args=(quote(cls.object.pk),)
+        )
+        cls.copy_url = reverse(
+            "feature_complete_toy:copy", args=(quote(cls.object.pk),)
+        )
+        cls.delete_url = reverse(
+            "feature_complete_toy:delete", args=(quote(cls.object.pk),)
+        )
+        cls.inspect_url = reverse(
+            "feature_complete_toy:inspect", args=(quote(cls.object.pk),)
+        )
+
+    def test_header_buttons_in_edit_view(self):
+        response = self.client.get(self.edit_url)
+        self.assertEqual(response.status_code, 200)
+        soup = self.get_soup(response.content)
+        header_buttons = soup.select(".w-slim-header .w-dropdown a")
+        expected_buttons = [
+            ("Copy", self.copy_url),
+            ("Delete", self.delete_url),
+            ("Inspect", self.inspect_url),
+        ]
+        self.assertEqual(
+            [(a.text.strip(), a.get("href")) for a in header_buttons],
+            expected_buttons,
         )

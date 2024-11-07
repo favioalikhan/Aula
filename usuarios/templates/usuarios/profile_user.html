@@ -19,7 +19,7 @@
                         {% if user.foto_perfil %}
                             <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
                         {% else %}
-                            <img src="{% static 'img/default-profile.png' %}" alt="Default Profile Photo" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                            <img src="{% static 'aula/img/default-profile.png' %}" alt="Default Profile Photo" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
                         {% endif %}
                         
                     </div>
@@ -61,7 +61,7 @@
                     {% if user.emprendedor_profile.startup.logo %}
                         <img src="{{ user.emprendedor_profile.startup.logo.url }}" alt="Logo de {{ user.emprendedor_profile.startup.nombre }}" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
                             {% else %}
-                        <img src="{% static 'img/default-startup.png' %}" alt="Logo predeterminado" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
+                        <img src="{% static 'aula/img/default-startup.png' %}" alt="Logo predeterminado" class="h-56 w-56 rounded-full shadow-lg mb-4 md:mb-0 object-cover">
                     {% endif %}
                     <a href="{% url 'profile-startup' %}" class="inline-flex items-center px-6 py-2 mt-4 bg-blue-700 text-white rounded-md hover:bg-navy-blue">
                         Ver Startup

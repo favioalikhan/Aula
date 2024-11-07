@@ -2,6 +2,7 @@
 {% load static %}
 {% block content %}
 {% block footer %}{% endblock %}
+
 <div class="flex justify-center items-center h-16 bg-navy-blue">
     <h1 class="text-2xl font-bold text-center text-white">Editando Perfil de {{ user.get_rol_display }}</h1>
 </div>
@@ -367,103 +368,13 @@
       </div>
     </div>
 </form>
-    
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        
-        const csrftoken = getCookie('csrftoken');
-    
-        document.querySelectorAll('.dejar-seguir-startup').forEach(button => {
-            button.addEventListener('click', function() {
-                const seguimientoId = this.getAttribute('data-seguimiento-id');
-                if (confirm('¿Estás seguro de que quieres dejar de seguir esta startup?')) {
-                    fetch(`/dejar-seguir-startup/${seguimientoId}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrftoken,
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            // Eliminar la startup de la interfaz
-                            const seguimientoElement = document.getElementById(`seguimiento-${seguimientoId}`);
-                            if (seguimientoElement) {
-                                seguimientoElement.remove();
-                            }
-    
-                            // Verificar si no quedan más startups seguidas
-                            const seguimientosContainer = document.querySelector('#startups .space-y-4');
-                            if (seguimientosContainer && !seguimientosContainer.querySelector('.flex')) {
-                                seguimientosContainer.innerHTML = '<p id="no-seguimientos">No estás siguiendo ninguna startup.</p>';
-                            }
-    
-                            alert('Has dejado de seguir la startup con éxito.');
-                        } else {
-                            alert('Error al dejar de seguir la startup: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Ocurrió un error al dejar de seguir la startup.');
-                    });
-                }
-            });
-        });
-
-        document.querySelectorAll('.mark-completed-btn').forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                const mentoriaId = this.getAttribute('data-mentoria-id');
-    
-                fetch('/marcar-mentoria-completada/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ mentoria_id: mentoriaId }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Actualiza el estado en la interfaz de usuario sin recargar la página
-                        const estadoElement = document.querySelector(`#mentoria-${mentoriaId} .mentoria-estado`);
-                        const buttonElement = this;
-                        if (estadoElement) {
-                            estadoElement.innerText = 'COMPLETADA'; // Cambia el estado visualmente
-                        }
-                        buttonElement.style.display = 'none';
-                        alert('Mentoría marcada como completada.');
-                    } else {
-                        alert(data.error || 'Error al marcar la mentoría.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al procesar la solicitud.');
-                });
-            });
-        });
-        // Función para obtener el CSRF token de las cookies
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    // Comprueba si esta cookie es la que estamos buscando
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    });
-</script>
 
 {% endblock content %}
+{% block extra_js %}
+    <script>
+        var isEmprendedor = {% if user.rol == user.EMPRENDEDOR %}true{% else %}false{% endif %};
+        var isMentorOrSpeaker = {% if user.rol == user.MENTOR or user.rol == user.SPEAKER %}true{% else %}false{% endif %};
+    </script>
+
+    <script src="{% static 'aula/js/edit_profiles.js' %}"></script>
+{% endblock %}

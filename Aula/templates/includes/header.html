@@ -3,16 +3,16 @@
 
 <header>
     {% get_site_root as site_root %}
-    <nav class="fixed left-0 right-0 top-0 w-full max-w-full px-4 py-2 z-50 bg-white border-b border-white/80 bg-opacity-95 backdrop-blur-3xl backdrop-saturate-200 shadow-md lg:px-8 lg:py-4">
+    <nav class="fixed left-0 right-0 top-0 w-full max-w-full px-4 py-2 z-30 bg-white border-b border-white/80 bg-opacity-95 backdrop-blur-3xl backdrop-saturate-200 shadow-md lg:px-8 lg:py-4">
         <div class="flex items-center justify-between text-blue-gray-900">
             <a href="{% pageurl site_root %}" class="mr-4 block cursor-pointer py-1.5 font-roboto text-base font-medium leading-relaxed text-inherit antialiased">
-                <img src="{% static 'img/logo-incuval.png' %}" alt="Logo" class="h-10 w-auto object-contain">
+                <img src="{% static 'aula/img/logo-incuval.png' %}" alt="Logo" class="h-10 w-auto object-contain">
             </a>
             <div class="flex items-center gap-4">
                 <div class="hidden lg:block">
                     <ul class="flex flex-col gap-2 mt-2 mb-4 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6">
                         <li class="block p-1 font-roboto text-sm antialiased font-normal leading-normal text-black">
-                            <a href="{% pageurl site_root %}" class="flex items-center transition-colors hover:border-b-4 border-navy-blue">{{ site_root.title }}</a>
+                            <a href="{% pageurl site_root %}" class="flex items-center transition-colors hover:border-b-4 border-navy-blue">Inicio</a>
                         </li>
                         <li class="block p-1 font-roboto text-sm antialiased font-normal leading-normal text-black">
                             <a href="{% url 'eventos'%}" class="flex items-center transition-colors hover:border-b-4 border-navy-blue">Eventos</a>
@@ -21,11 +21,11 @@
                             <span class="flex items-center transition-colors hover:border-b-4 border-navy-blue">
                                 Programas <i class="fa-light fa-angle-down" style="color: #005eff;"></i>
                             </span>
-                            <ul class="absolute hidden group-hover:block bg-white shadow-md">
+                            <ul class="absolute hidden group-hover:block bg-white shadow-md w-48 rounded-md">
                                 {% for menuitem in site_root.get_children.live.in_menu %}
-                                        <li class="block p-1 font-roboto text-sm antialiased font-normal leading-normal text-navy-blue">
-                                            <a href="{% pageurl menuitem %}" class="flex items-center">{{ menuitem.title }}</a>
-                                        </li>
+                                    <li>
+                                        <a href="{% pageurl menuitem %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md">{{ menuitem.title }}</a>
+                                    </li>
                                 {% endfor %}
                             </ul>
                         </li>
@@ -50,9 +50,6 @@
                         </div>
                         <div id="notificationsContainer" class="py-1" role="none">
                             {{ notificaciones_html|safe }}
-                        </div>
-                        <div class="py-1" role="none">
-                            <a href="{% url 'lista-notificaciones' %}" class="text-sm text-center block px-4 py-2 text-blue-600 hover:text-blue-700">Ver todas las notificaciones</a>
                         </div>
                     </div>
                 </div>
@@ -91,30 +88,30 @@
     <div id="mobile-menu" class="fixed top-[60px] left-0 w-full z-10 bg-white shadow-md transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <ul class="flex flex-col gap-2 p-4">
             <li>
-                <a href="{% pageurl site_root %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-gray-200 rounded-md">{{ site_root.title }}</a>
+                <a href="{% pageurl site_root %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md">Inicio</a>
             </li>
             <li>
-                <a href="{% url 'eventos'%}" class="block py-2 px-4 text-blue-gray-900 hover:bg-gray-200 rounded-md">Eventos</a>
+                <a href="{% url 'eventos'%}" class="block py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md">Eventos</a>
             </li>
             <li class="relative">
-                <span class="flex items-center justify-between py-2 px-4 text-blue-gray-900 hover:bg-gray-200 rounded-md cursor-pointer" id="programas-toggle">
+                <span class="flex items-center justify-between py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md cursor-pointer" id="programas-toggle">
                     Programas
                     <i class="fa-light fa-angle-down" style="color: #005eff;"></i>
                 </span>
                 <ul class="hidden pl-4" id="programas-submenu">
                     {% for menuitem in site_root.get_children.live.in_menu %}
                         <li>
-                            <a href="{% pageurl menuitem %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-gray-200 rounded-md">{{ menuitem.title }}</a>
+                            <a href="{% pageurl menuitem %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md">{{ menuitem.title }}</a>
                         </li>
                     {% endfor %}
                 </ul>
             </li>
             <li>
-                <a href="{% url 'listar-todos'%}" class="block py-2 px-4 text-blue-gray-900 hover:bg-gray-200 rounded-md">Comunidad</a>
+                <a href="{% url 'listar-todos'%}" class="block py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md">Comunidad</a>
             </li>
             {% if request.user.is_authenticated %}
                 <li>
-                    <a href="{% url 'profile' %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-gray-200 rounded-md">{{ request.user.username }}</a>
+                    <a href="{% url 'profile' %}" class="block py-2 px-4 text-blue-gray-900 hover:bg-navy-blue/20 rounded-md">{{ request.user.username }}</a>
                 </li>
                 <li>
                     <form action="{% url 'logout' %}" method="post">
@@ -135,84 +132,7 @@
 
     {#% wagtailuserbar "bottom-right" %#}
 </header>
-
-<script>
-  
-document.addEventListener('DOMContentLoaded', function() {
-    const notificationButton = document.getElementById('notificationButton');
-    const notificationDropdown = document.getElementById('notificationDropdown');
-    const notificationsContainer = document.getElementById('notificationsContainer');
-    const notificationCount = document.getElementById('notificationCount');
-
-    function toggleDropdown() {
-        notificationDropdown.classList.toggle('hidden');
-        if (!notificationDropdown.classList.contains('hidden')) {
-            fetchNotifications();
-        }
-    }
-
-    function fetchNotifications() {
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        fetch('/ver-notificaciones/', {  // Update this URL to match your view
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrftoken
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log("Data received:", data);
-            notificationsContainer.innerHTML = data.notificaciones_html;
-            updateNotificationCount(data.unread_notifications_count);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            notificationsContainer.innerHTML = '<p class="text-sm text-red-500 px-4 py-2">Error al cargar las notificaciones.</p>';
-        });
-    }
-
-    function updateNotificationCount(count) {
-        notificationCount.textContent = count;
-        notificationCount.classList.toggle('hidden', count === 0);
-    }
-
-    if (notificationButton) {
-        console.log("Adding click event listener to notification button");  
-        notificationButton.addEventListener('click', toggleDropdown);
-    }
-
-    setInterval(fetchNotifications, 60000);  // Actualizar cada minuto
-
-    // Código existente para el menú móvil
-    const menuToggle = document.getElementById('menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const programasToggle = document.getElementById('programas-toggle');
-    const programasSubmenu = document.getElementById('programas-submenu');
-
-    if (menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('-translate-x-full');
-        });
-    }
-
-    if (programasToggle) {
-        programasToggle.addEventListener('click', () => {
-            programasSubmenu.classList.toggle('hidden');
-        });
-    }
-
-    // Cerrar el menú móvil cuando se hace clic fuera de él
-    document.addEventListener('click', (event) => {
-        if (mobileMenu && !mobileMenu.contains(event.target) && !menuToggle.contains(event.target)) {
-            mobileMenu.classList.add('-translate-x-full');
-        }
-    });
-    fetchNotifications();
-});
-
-</script>
+{% block extra_js %}
+    <script> var isAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }}; </script>
+    <script type="text/javascript" src="{% static 'aula/js/header.js' %}"></script>
+{% endblock %}

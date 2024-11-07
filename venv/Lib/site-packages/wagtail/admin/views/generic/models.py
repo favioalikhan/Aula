@@ -8,7 +8,6 @@ from django.core.exceptions import (
     PermissionDenied,
 )
 from django.db import models, transaction
-from django.db.models import Q
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.functions import Cast
 from django.http import Http404, HttpResponseRedirect
@@ -29,7 +28,6 @@ from wagtail.actions.unpublish import UnpublishAction
 from wagtail.admin import messages
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.forms.models import WagtailAdminModelForm
-from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.panels import get_edit_handler
 from wagtail.admin.ui.components import Component, MediaContainer
 from wagtail.admin.ui.fields import display_class_registry
@@ -43,6 +41,7 @@ from wagtail.admin.ui.tables import (
 from wagtail.admin.utils import get_latest_str, get_valid_next_url_from_request
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
 from wagtail.admin.widgets.button import (
+    Button,
     ButtonWithDropdown,
     HeaderButton,
     ListingButton,
@@ -51,8 +50,8 @@ from wagtail.log_actions import log
 from wagtail.log_actions import registry as log_registry
 from wagtail.models import DraftStateMixin, Locale, ReferenceIndex
 from wagtail.models.audit_log import ModelLogEntry
-from wagtail.search.backends import get_search_backend
 from wagtail.search.index import class_is_indexed
+from wagtail.utils.deprecation import RemovedInWagtail70Warning
 
 from .base import BaseListingView, WagtailAdminTemplateMixin
 from .mixins import BeforeAfterHookMixin, HookResponseMixin, LocaleMixin, PanelMixin
@@ -74,57 +73,40 @@ class IndexView(
     inspect_url_name = None
     delete_url_name = None
     any_permission_required = ["add", "change", "delete", "view"]
-    search_fields = None
-    search_backend_name = "default"
-    is_searchable = None
-    search_kwarg = "q"
     columns = None  # If not explicitly specified, will be derived from list_display
     list_display = ["__str__", UpdatedAtColumn()]
     list_filter = None
     show_other_searches = False
 
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
-
-        if not self.filterset_class:
-            # Allow filterset_class to be dynamically constructed from list_filter
-            self.filterset_class = self.get_filterset_class()
-
-        self.setup_search()
-
-    def setup_search(self):
-        self.is_searchable = self.get_is_searchable()
-        self.search_url = self.get_search_url()
-        self.search_form = self.get_search_form()
-        self.is_searching = False
-        self.search_query = None
-
-        if self.search_form and self.search_form.is_valid():
-            self.search_query = self.search_form.cleaned_data[self.search_kwarg]
-            self.is_searching = bool(self.search_query)
-
-    def get_is_searchable(self):
-        if self.model is None:
-            return False
-        if self.is_searchable is None:
-            return class_is_indexed(self.model) or self.search_fields
-        return self.is_searchable
-
     def get_search_url(self):
-        if not self.is_searchable:
-            return None
+        # This is only used by views that do not use breadcrumbs, thus uses the
+        # legacy header.html. The search in that header template accepts both
+        # the search_url (which really should be search_url_name) and the
+        # index_results_url. This means we can advise using the latter instead,
+        # without having to instruct how to set up breadcrumbs.
+        warnings.warn(
+            "`IndexView.get_search_url` is deprecated. "
+            "Use `IndexView.get_index_results_url` instead.",
+            RemovedInWagtail70Warning,
+        )
         return self.index_url_name
 
-    def get_search_form(self):
-        if self.model is None or not self.is_searchable:
-            return None
+    @cached_property
+    def search_url(self):
+        return self.get_search_url()
 
-        if self.is_searchable and self.search_kwarg in self.request.GET:
-            return SearchForm(self.request.GET)
+    @cached_property
+    def is_searchable(self):
+        # Do not automatically enable search if the model is not indexed and
+        # search_fields is not defined.
+        if not (self.model and class_is_indexed(self.model)) and not self.search_fields:
+            return False
 
-        return SearchForm()
+        # Require the results-only view to be set up before enabling search
+        return bool(self.index_results_url or self.search_url)
 
-    def get_filterset_class(self):
+    @cached_property
+    def filterset_class(self):
         # Allow filterset_class to be dynamically constructed from list_filter.
 
         # If the model is translatable, ensure a ``WagtailFilterSet`` subclass
@@ -196,43 +178,6 @@ class IndexView(
                     queryset = queryset.order_by("-pk")
 
             return queryset
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = self.search_queryset(queryset)
-        return queryset
-
-    def search_queryset(self, queryset):
-        if not self.is_searching:
-            return queryset
-
-        if class_is_indexed(queryset.model) and self.search_backend_name:
-            search_backend = get_search_backend(self.search_backend_name)
-            if queryset.model.get_autocomplete_search_fields():
-                return search_backend.autocomplete(
-                    self.search_query,
-                    queryset,
-                    fields=self.search_fields,
-                    order_by_relevance=(not self.is_explicitly_ordered),
-                )
-            else:
-                # fall back on non-autocompleting search
-                warnings.warn(
-                    f"{queryset.model} is defined as Indexable but does not specify "
-                    "any AutocompleteFields. Searches within the admin will only "
-                    "respond to complete words.",
-                    category=RuntimeWarning,
-                )
-                return search_backend.search(
-                    self.search_query,
-                    queryset,
-                    fields=self.search_fields,
-                    order_by_relevance=(not self.is_explicitly_ordered),
-                )
-        query = Q()
-        for field in self.search_fields or []:
-            query |= Q(**{field + "__icontains": self.search_query})
-        return queryset.filter(query)
 
     def _get_title_column_class(self, column_class):
         if not issubclass(column_class, ButtonsColumnMixin):
@@ -356,13 +301,6 @@ class IndexView(
             return capfirst(self.model._meta.verbose_name_plural)
         return self.page_title
 
-    def get_breadcrumbs_items(self):
-        if not self.model:
-            return self.breadcrumbs_items
-        return self.breadcrumbs_items + [
-            {"url": "", "label": capfirst(self.model._meta.verbose_name_plural)},
-        ]
-
     @cached_property
     def header_buttons(self):
         buttons = []
@@ -453,6 +391,12 @@ class IndexView(
             )
         return _("Add")
 
+    @cached_property
+    def verbose_name_plural(self):
+        if self.model:
+            return self.model._meta.verbose_name_plural
+        return None
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
@@ -461,11 +405,12 @@ class IndexView(
             context["add_url"] = context["header_action_url"] = self.add_url
             context["header_action_label"] = self.add_item_label
 
-        context["is_searchable"] = self.is_searchable
-        context["search_url"] = self.get_search_url()
-        context["search_form"] = self.search_form
-        context["is_searching"] = self.is_searching
-        context["query_string"] = self.search_query
+        # RemovedInWagtail70Warning:
+        # Remove these in favor of using search_form and index_results_url
+        if self.is_searchable and not self.index_results_url:
+            context["is_searchable"] = self.is_searchable
+            context["search_url"] = self.search_url
+
         context["model_opts"] = self.model and self.model._meta
         return context
 
@@ -498,6 +443,7 @@ class CreateView(
         "The %(model_name)s could not be created due to errors."
     )
     submit_button_label = gettext_lazy("Create")
+    submit_button_active_label = gettext_lazy("Creating…")
     actions = ["create"]
 
     def setup(self, request, *args, **kwargs):
@@ -588,14 +534,20 @@ class CreateView(
             % {"model_name": self.model and self.model._meta.verbose_name}
         )
 
+    @cached_property
+    def has_unsaved_changes(self):
+        return self.form.is_bound
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         self.form = context.get("form")
         side_panels = self.get_side_panels()
         context["action_url"] = self.add_url
         context["submit_button_label"] = self.submit_button_label
+        context["submit_button_active_label"] = self.submit_button_active_label
         context["side_panels"] = side_panels
         context["media"] += side_panels.media
+        context["has_unsaved_changes"] = self.has_unsaved_changes
         return context
 
     def get_side_panels(self):
@@ -705,8 +657,10 @@ class EditView(
     form_class = None
     index_url_name = None
     edit_url_name = None
+    copy_url_name = None
     delete_url_name = None
     history_url_name = None
+    inspect_url_name = None
     usage_url_name = None
     page_title = gettext_lazy("Editing")
     context_object_name = None
@@ -716,6 +670,7 @@ class EditView(
     success_message = gettext_lazy("%(model_name)s '%(object)s' updated.")
     error_message = gettext_lazy("The %(model_name)s could not be saved due to errors.")
     submit_button_label = gettext_lazy("Save")
+    submit_button_active_label = gettext_lazy("Saving…")
     actions = ["edit"]
 
     def setup(self, request, *args, **kwargs):
@@ -779,6 +734,42 @@ class EditView(
             .first()
         )
 
+    @cached_property
+    def can_delete(self):
+        return self.user_has_permission_for_instance("delete", self.object)
+
+    @cached_property
+    def header_more_buttons(self):
+        buttons = []
+        if copy_url := self.get_copy_url():
+            buttons.append(
+                Button(
+                    _("Copy"),
+                    url=copy_url,
+                    icon_name="copy",
+                    priority=10,
+                )
+            )
+        if self.can_delete and (delete_url := self.get_delete_url()):
+            buttons.append(
+                Button(
+                    self.delete_item_label,
+                    url=delete_url,
+                    icon_name="bin",
+                    priority=20,
+                )
+            )
+        if inspect_url := self.get_inspect_url():
+            buttons.append(
+                Button(
+                    _("Inspect"),
+                    url=inspect_url,
+                    icon_name="info-circle",
+                    priority=30,
+                )
+            )
+        return buttons
+
     def get_edit_url(self):
         if not self.edit_url_name:
             raise ImproperlyConfigured(
@@ -787,6 +778,10 @@ class EditView(
             )
         return reverse(self.edit_url_name, args=(quote(self.object.pk),))
 
+    def get_copy_url(self):
+        if self.copy_url_name and self.user_has_permission("add"):
+            return reverse(self.copy_url_name, args=(quote(self.object.pk),))
+
     def get_delete_url(self):
         if self.delete_url_name:
             return reverse(self.delete_url_name, args=(quote(self.object.pk),))
@@ -794,6 +789,10 @@ class EditView(
     def get_history_url(self):
         if self.history_url_name:
             return reverse(self.history_url_name, args=(quote(self.object.pk),))
+
+    def get_inspect_url(self):
+        if self.inspect_url_name:
+            return reverse(self.inspect_url_name, args=(quote(self.object.pk),))
 
     def get_usage_url(self):
         if self.usage_url_name:
@@ -895,6 +894,10 @@ class EditView(
             messages.validation_error(self.request, error_message, form)
         return super().form_invalid(form)
 
+    @cached_property
+    def has_unsaved_changes(self):
+        return self.form.is_bound
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         self.form = context.get("form")
@@ -904,9 +907,9 @@ class EditView(
         context["side_panels"] = side_panels
         context["media"] += side_panels.media
         context["submit_button_label"] = self.submit_button_label
-        context["can_delete"] = self.user_has_permission_for_instance(
-            "delete", self.object
-        )
+        context["submit_button_active_label"] = self.submit_button_active_label
+        context["has_unsaved_changes"] = self.has_unsaved_changes
+        context["can_delete"] = self.can_delete
         if context["can_delete"]:
             context["delete_url"] = self.get_delete_url()
             context["delete_item_label"] = self.delete_item_label
@@ -1034,7 +1037,7 @@ class DeleteView(
 class InspectView(PermissionCheckedMixin, WagtailAdminTemplateMixin, TemplateView):
     any_permission_required = ["add", "change", "delete", "view"]
     template_name = "wagtailadmin/generic/inspect.html"
-    page_title = gettext_lazy("Inspecting")
+    page_title = gettext_lazy("Inspect")
     model = None
     index_url_name = None
     edit_url_name = None
@@ -1071,11 +1074,24 @@ class InspectView(PermissionCheckedMixin, WagtailAdminTemplateMixin, TemplateVie
         items.append(
             {
                 "url": "",
-                "label": _("Inspect"),
+                "label": self.get_page_title(),
                 "sublabel": object_str,
             }
         )
         return self.breadcrumbs_items + items
+
+    @cached_property
+    def header_more_buttons(self):
+        buttons = []
+        if edit_url := self.get_edit_url():
+            buttons.append(
+                Button(_("Edit"), url=edit_url, icon_name="edit", priority=10)
+            )
+        if delete_url := self.get_delete_url():
+            buttons.append(
+                Button(_("Delete"), url=delete_url, icon_name="bin", priority=20)
+            )
+        return buttons
 
     def get_fields(self):
         fields = self.fields or [
@@ -1146,8 +1162,6 @@ class InspectView(PermissionCheckedMixin, WagtailAdminTemplateMixin, TemplateVie
         context = super().get_context_data(**kwargs)
         context["object"] = self.object
         context["fields"] = self.get_fields_context()
-        context["edit_url"] = self.get_edit_url()
-        context["delete_url"] = self.get_delete_url()
         return context
 
 

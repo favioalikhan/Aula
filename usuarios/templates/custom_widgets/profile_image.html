@@ -2,9 +2,9 @@
 
 <div class="custom-profile-widget relative group">
     {% if widget.value %}
-        <img src="{{ widget.value.url }}" alt="Foto de perfil" class="h-56 w-56 rounded-full shadow-lg object-cover">
+        <img id="preview-{{ widget.attrs.id }}" src="{{ widget.value.url }}" alt="Foto de perfil" class="h-56 w-56 rounded-full shadow-lg object-cover">
     {% else %}
-        <img src="{% static 'img/default-profile.png' %}" alt="Foto de perfil por defecto" class="h-56 w-56 rounded-full shadow-lg object-cover">
+        <img id="preview-{{ widget.attrs.id }}" src="{% static 'aula/img/default-profile.png' %}" alt="Foto de perfil por defecto" class="h-56 w-56 rounded-full shadow-lg object-cover">
     {% endif %}
 
     <!-- Botón de edición superpuesto -->
@@ -12,6 +12,106 @@
         <i class="fa-solid fa-pen-to-square text-white text-2xl"></i>
     </label>
 
+    <!-- Botón de eliminar superpuesto -->
+    {% if widget.is_initial and not widget.required %}
+        <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}" class="hidden" >
+        <label for="{{ widget.checkbox_id }}" id="clear-button-{{ widget.attrs.id }}" class="absolute top-0 right-0 m-2 bg-red hover:bg-navy-blue text-white rounded-full p-2 focus:outline-none cursor-pointer">
+            <i class="fa-solid fa-trash-alt"></i>
+        </label>
+    {% endif %}
+
     <!-- Input de archivo oculto -->
     <input id="{{ widget.attrs.id }}" type="file" name="{{ widget.name }}" accept="image/*" class="hidden">
+    <!-- Mensaje de error -->
+    <p id="error-message-{{ widget.attrs.id }}" class="hidden text-red text-sm mt-2"></p>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const widgets = document.querySelectorAll('.custom-profile-widget');
+    
+        widgets.forEach(function(widget) {
+            const fileUpload = widget.querySelector('input[type="file"]');
+            const preview = widget.querySelector('img');
+            const errorMessage = widget.querySelector(`#error-message-${fileUpload.id}`);
+            const clearCheckbox = widget.querySelector(`input[type="checkbox"][name="${fileUpload.name}-clear"]`);
+            const clearButton = widget.querySelector(`#clear-button-${fileUpload.id}`);
+    
+            const defaultImageUrl = '{% static "aula/img/default-profile.png" %}';
+    
+            const allowedTypes = [
+                'image/png',
+                'image/jpeg',
+                'image/svg+xml',
+                'image/gif',
+                'image/webp',
+                'image/bmp',
+                'image/tiff',
+                'image/vnd.microsoft.icon',
+                'image/x-icon',
+                'image/avif',
+            ];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+    
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                preview.src = defaultImageUrl;
+            }
+    
+            function clearError() {
+                errorMessage.textContent = '';
+                errorMessage.classList.add('hidden');
+            }
+    
+            fileUpload.addEventListener('change', function(event) {
+                clearError();
+                const file = event.target.files[0];
+    
+                if (!file) {
+                    preview.src = defaultImageUrl;
+                    return;
+                }
+    
+                if (!allowedTypes.includes(file.type)) {
+                    showError('Por favor, sube solo archivos de imagen (PNG, JPG, SVG, etc.).');
+                    fileUpload.value = '';
+                    return;
+                }
+    
+                if (file.size > maxSize) {
+                    showError('El archivo es demasiado grande. El tamaño máximo es 10MB.');
+                    fileUpload.value = '';
+                    return;
+                }
+    
+                const reader = new FileReader();
+    
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    if (clearCheckbox) {
+                        clearCheckbox.checked = false;
+                    }
+                };
+    
+                reader.onerror = function() {
+                    showError('Error al leer el archivo. Por favor, intenta de nuevo.');
+                    fileUpload.value = '';
+                };
+    
+                reader.readAsDataURL(file);
+            });
+    
+            // Evento para el botón de eliminar
+            if (clearCheckbox) {
+                clearCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        preview.src = defaultImageUrl;
+                        fileUpload.value = '';
+                    }
+                });
+            }
+            
+        });
+    });
+</script>

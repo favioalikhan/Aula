@@ -57,4 +57,7 @@ urlpatterns = [
         ),
         name="password_reset_complete",
     ),
+    path(
+        "terminos-condiciones/", views.terminos_condiciones, name="terminos_condiciones"
+    ),
 ]

@@ -10,7 +10,7 @@
   <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12">
     <div class="w-full max-w-md">
       <div class="flex justify-center mb-8 items-center">
-        <img src="{% static 'img/INCUBADORA.png' %}" class="w-50 h-20 text-indigo-600" alt="Logo" />
+        <img src="{% static 'aula/img/INCUBADORA.png' %}" class="w-50 h-20 text-indigo-600" alt="Logo" />
       </div>
       <h2 class="text-3xl font-bold text-navy-blue mb-6">Bienvenido</h2>
       <p class="mb-6 text-black ">
@@ -106,26 +106,11 @@
 
   <!-- Imagen de fondo -->
   <div class="hidden md:block w-1/2 bg-gray-200 h-full">
-    <img class="object-cover w-full h-full" src="{% static 'img/cover-incuval.png' %}" alt="Incuval" />
+    <img class="object-cover w-full h-full" src="{% static 'aula/img/Cover-incuval.png' %}" alt="Incuval" />
   </div>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const togglePassword = document.querySelector('#togglePassword');
-    const password = document.querySelector('#password');
-    const toggleIcon = document.querySelector('#toggleIcon');
-
-    togglePassword.addEventListener('click', function() {
-      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-      password.setAttribute('type', type);
-      
-      if (type === 'password') {
-        toggleIcon.className = 'fa-light fa-eye-slash';
-      } else {
-        toggleIcon.className = 'fa-sharp fa-light fa-eye';
-      }
-    });
-  });
-</script>
 {% endblock content %}
+{% block extra_js %}
+ <script type="text/javascript" src="{% static 'aula/js/login.js' %}"></script>
+{% endblock %}

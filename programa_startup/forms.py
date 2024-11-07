@@ -1,6 +1,8 @@
 from django import forms
 from .models import Startup, IntegranteStartup, Entregable, Sesion, Tarea, Logro
 from usuarios.widgets import CustomStartupImageWidget
+from django.forms.widgets import FILE_INPUT_CONTRADICTION
+from django.core.exceptions import ValidationError
 
 
 class StartupForm(forms.ModelForm):
@@ -77,6 +79,58 @@ class StartupForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_startup_image(self):
+        image = self.cleaned_data.get("logo", False)
+        if image:
+            if image.size > 10 * 1024 * 1024:
+                raise forms.ValidationError("La imagen de startup excede los 10MB.")
+            if image.content_type not in [
+                "image/png",
+                "image/jpeg",
+                "image/svg+xml",
+                "image/x-xbitmap",
+                "image/tiff",
+                "image/vnd.microsoft.icon",
+                "image/x-icon",
+                "image/gif",
+                "image/webp",
+                "image/apng",
+                "image/pjpeg",
+                "image/avif",
+                "image/bmp",
+                "image/jfif",
+                "image/pjp",
+            ]:
+                raise forms.ValidationError(
+                    "Tipo de archivo no soportado para la imagen de startup."
+                )
+        return image
+
+    def clean_logo(self):
+        logo = self.cleaned_data.get("logo")
+        if logo == FILE_INPUT_CONTRADICTION:
+            raise ValidationError(
+                "No puedes subir una nueva imagen y eliminar la existente al mismo tiempo."
+            )
+        elif logo is False:
+            # Usuario ha marcado el checkbox de eliminación
+            return False
+        elif not logo:
+            # No se subió un nuevo archivo y no se marcó el checkbox
+            return self.instance.logo
+        else:
+            # Se subió un nuevo archivo
+            return logo
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data.get("logo") is False:
+            # Establecer foto_perfil en None para eliminarla
+            user.logo = None
+        if commit:
+            user.save()
+        return user
 
 
 class LogroForm(forms.ModelForm):

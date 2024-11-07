@@ -1,0 +1,50 @@
+[
+    {
+        "model": "usuarios_app.customuser",
+        "pk": 1,
+        "fields": {
+            "email": "testuser1@example.com",
+            "username": "testuser1",
+            "password": "pbkdf2_sha256$216000$YBpZhxPEM2D7$h2h3/xTOu8Osy0E7Z/8CsbchKT5jH6GZfbpRHC60AK4=",
+            "first_name": "Test",
+            "last_name": "User1",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "date_joined": "2024-01-01T12:00:00Z",
+            "rol": "EMPRENDEDOR"
+        }
+    },
+    {
+        "model": "usuarios_app.customuser",
+        "pk": 2,
+        "fields": {
+            "email": "testuser2@example.com",
+            "username": "testuser2",
+            "password": "pbkdf2_sha256$216000$J5lTnR5Em2A9$A4B9/6XJxKwO7Qr3qL6CsbmhHc8zG2AqZtfRHQK3AK9=",
+            "first_name": "Test",
+            "last_name": "User2",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "date_joined": "2024-01-02T12:00:00Z",
+            "rol": "MENTOR"
+        }
+    },
+    {
+        "model": "usuarios_app.customuser",
+        "pk": 3,
+        "fields": {
+            "email": "adminuser@example.com",
+            "username": "adminuser",
+            "password": "pbkdf2_sha256$216000$T4zPnZ6Rp8K2$C2N4/YXJrKwX8Tg3bK9CsdefJc7hG2JqYzvHHLV4BM5=",
+            "first_name": "Admin",
+            "last_name": "User",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true,
+            "date_joined": "2024-01-03T12:00:00Z",
+            "rol": "ADMIN"
+        }
+    }
+]

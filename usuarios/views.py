@@ -263,7 +263,9 @@ class EditProfile(LoginRequiredMixin, TemplateView):
         if user_form.is_valid() and (
             emprendedor_form.is_valid() or mentor_form.is_valid()
         ):
-            user_form.save()
+            user = user_form.save(commit=False)
+
+            user.save()
             if hasattr(user, "emprendedor_profile"):
                 emprendedor_form.save()
             if hasattr(user, "mentor_profile"):
@@ -486,3 +488,7 @@ def ruta_emprendedor(request):
     }
 
     return render(request, "usuarios/ruta_emprendedor.html", context)
+
+
+def terminos_condiciones(request):
+    return render(request, "usuarios/terminos_condiciones.html")

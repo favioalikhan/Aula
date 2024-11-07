@@ -118,7 +118,7 @@ def dashboard_callback(request, context):
     progress = []
     for startup in startups_page:
         logo_url = (
-            startup.logo.url if startup.logo else "/static/img/default-startup.png"
+            startup.logo.url if startup.logo else "/static/aula/img/default-startup.png"
         )
         programa_title = startup.programa.title if startup.programa else "Sin programa"
         nombre = startup.nombre if startup.nombre else "Startup sin nombre"

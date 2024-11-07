@@ -1,18 +1,14 @@
-
 {% load static wagtailcore_tags %}
-
-<footer class="bg-navy-blue text-white p-4">
+<footer class="bg-navy-blue text-white p-4 mt-auto">
     <div class="container mx-auto flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <!-- Primer bloque: Logos -->
         <div class="text-center flex items-center space-y-4 mb-4 md:items-end h-full w-full">
-            <img src="{% static 'img/INCUBADORA-BLANCO.png' %}" alt="UNHEVAL Logo" class="h-28 w-80">
+            <img src="{% static 'aula/img/INCUBADORA-BLANCO.png' %}" alt="UNHEVAL Logo" class="h-28 w-80">
             <div class="h-28 w-px bg-white mx-2"></div>
-            <img src="{% static 'img/Logos-Incuval-BLANCO-1.png' %}" alt="Incuval Ventures Logo" class="mb-2 h-28 w-24">
+            <img src="{% static 'aula/img/Logos-Incuval-BLANCO-1.png' %}" alt="Incuval Ventures Logo" class="mb-2 h-28 w-24">
         </div>
-        
-        <!-- Segundo bloque: Síguenos y redes sociales -->
+
         <div class="text-center flex flex-col items-center md:items-end space-y-2 h-full w-full">
-            <p class="text-sm font-semibold">Síguenos en</p>
+            <p class="text-sm font-semibold">Contáctanos en</p>
             <div class="flex space-x-4">
                 {% with facebook_url=settings.base.NavigationSettings.facebook_url whatsapp_url=settings.base.NavigationSettings.whatsapp_url youtube_url=settings.base.NavigationSettings.youtube_url linkdln_url=settings.base.NavigationSettings.linkdln_url instagram_url=settings.base.NavigationSettings.instagram_url email_url=settings.base.NavigationSettings.email_url %}
                     {% if facebook_url or whatsapp_url or youtube_url or linkdln_url or instagram_url or email_url %}
@@ -42,5 +38,4 @@
             </div>
         </div>
     </div>
-    {#% get_footer_text %#}
 </footer>

@@ -1,0 +1,71 @@
+{% load static %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for startup in startups %}
+    <div id="seguimiento-{{ startup.id }}" class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="flex flex-col items-center p-6">
+            <div class="w-24 h-24 rounded-full bg-gray-300 mb-4 overflow-hidden">
+                {% if startup.logo %}
+                    <img src="{{ startup.logo.url }}?height=100&width=100" alt="{{ startup.nombre }}" class="w-full h-full object-cover">
+                {% else %}
+                    <img src="{% static 'aula/img/default-startup.png' %}?height=100&width=100" alt="Default Profile Photo" class="w-full h-full object-cover">
+                {% endif %}
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-center">{{ startup.nombre }}</h3>
+            <p class="text-sm text-gray-500 text-center">Fundador: {{ startup.fundador.username }}</p>
+            {% if user.is_authenticated and user.rol == user.EMPRENDEDOR %}
+                {% if emprendedor_profile.startup and startup.id == emprendedor_profile.startup.id %}
+                {%else%}
+                    {% if startup.id in seguidores_startup_ids %}
+                    <div>
+                        <button type="button" 
+                                class="dejar-seguir-startup btn btn-primary mt-4 hover:underline"
+                                data-seguimiento-id="{{ startup.seguimiento_id }}">
+                            Dejar de Seguir
+                        </button>
+                    </div>
+                    {% else %}
+                        <a href="{% url 'seguir-startup' startup.id %}" class="btn btn-primary mt-4 hover:underline">Seguir Startup</a>
+                    {% endif %}
+                {%endif%}
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden w-full col-span-1 md:col-span-2 lg:col-span-3">
+        <div class="flex flex-col items-center p-6 w-full">
+            <div class="w-24 h-24 rounded-full bg-gray-300 mb-4 overflow-hidden">
+                <img src="{% static 'aula/img/sad-face.png' %}?height=100&width=100" class="w-full h-full object-cover">
+            </div>
+            {% if search_query %}
+                <h3 class="text-xl font-semibold mb-2 text-center">No se encontró la startup "{{ search_query }}"</h3>
+            {% else %}
+                <h3 class="text-xl font-semibold mb-2 text-center">No hay startups registrados.</h3>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Controles de paginación -->
+<div class="mt-4">
+    {% if startups.has_other_pages %}
+        <div class="flex justify-center">
+            {% if startups.has_previous %}
+                <button class="pagination-btn px-3 py-1 mx-1 bg-gray-200 rounded" data-page="{{ startups.previous_page_number }}">Anterior</button>
+            {% endif %}
+            {% for num in startups.paginator.page_range %}
+                {% if startups.number == num %}
+                    <span class="px-3 py-1 mx-1 bg-blue-500 text-white rounded">{{ num }}</span>
+                {% else %}
+                    <button class="pagination-btn px-3 py-1 mx-1 bg-gray-200 rounded" data-page="{{ num }}">{{ num }}</button>
+                {% endif %}
+            {% endfor %}
+            {% if startups.has_next %}
+                <button class="pagination-btn px-3 py-1 mx-1 bg-gray-200 rounded" data-page="{{ startups.next_page_number }}">Siguiente</button>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

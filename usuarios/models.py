@@ -17,6 +17,7 @@ from programa_startup.models import (
 )
 from django.utils import timezone
 import re
+from PIL import Image
 
 
 class CustomUserManager(BaseUserManager):
@@ -105,6 +106,13 @@ class CustomUser(AbstractUser):
 
         super().save(*args, **kwargs)
 
+        # Optimizar la imagen de perfil
+        if self.foto_perfil:
+            img = Image.open(self.foto_perfil.path)
+            if img.height > 800 or img.width > 800:
+                output_size = (800, 800)
+                img.thumbnail(output_size)
+                img.save(self.foto_perfil.path)
         # Crear perfil de emprendedor, mentor o speaker según el rol seleccionado
         if self.rol == self.EMPRENDEDOR and not hasattr(self, "emprendedor_profile"):
             Emprendedor.objects.create(user=self)

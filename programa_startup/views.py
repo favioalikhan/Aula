@@ -21,7 +21,7 @@ from .models import (
 )
 from django.http import JsonResponse
 from usuarios.models import CustomUser, Emprendedor, Mentor, Mentoria, SeguidorStartup
-from django.db.models import OuterRef, Exists, Subquery
+from django.db.models import OuterRef, Exists, Subquery, Q
 from django.utils import timezone
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -40,6 +40,7 @@ from .forms import (
 from wagtail.models import Page
 from django.views import View
 from django.db import transaction
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
 """
@@ -209,8 +210,8 @@ class EditProfileStartup(LoginRequiredMixin, TemplateView):
             # Actualizar información de la startup
             startup_form = StartupForm(request.POST, request.FILES, instance=startup)
             if startup_form.is_valid():
-                startup_form.save()
-
+                startups = startup_form.save(commit=False)
+                startups.save()
                 # Procesar logros existentes
                 logro_ids = request.POST.getlist("logro_ids")
                 for logro_id in logro_ids:
@@ -589,6 +590,29 @@ def crear_tarea(request, sesion_id):
             tarea.sesion = sesion
             tarea.save()
 
+            # Obtener el programa y las startups asociadas
+            programa_page = sesion.sprint.modulo.get_parent().specific
+            if isinstance(programa_page, ProgramaPage):
+                integrantes = IntegranteStartup.objects.filter(
+                    startup__programa=programa_page
+                ).select_related("usuario")
+
+                # Crear notificación para cada integrante
+                for integrante in integrantes:
+                    mensaje = f"Nueva tarea asignada: {tarea.titulo} en la sesión {sesion.titulo}."
+                    Notificacion.objects.create(
+                        usuario=integrante.usuario, tipo="Tarea", mensaje=mensaje
+                    )
+
+                # Notificar al creador de la tarea
+                Notificacion.objects.create(
+                    usuario=request.user,
+                    tipo="Tarea",
+                    mensaje=f"Has creado la tarea '{tarea.titulo}' en la sesión '{sesion.titulo}'.",
+                )
+
+                messages.success(request, "Tarea creada exitosamente.")
+
             # Obtener la página del módulo
             modulo_page = Page.objects.get(id=sesion.sprint.modulo.id)
             return redirect(modulo_page.get_url())
@@ -600,7 +624,10 @@ def crear_tarea(request, sesion_id):
     modulo_page_url = modulo_page.get_url()
 
     # Obtener el slug del programa
-    programa_slug = sesion.sprint.modulo.programa.slug
+    programa_page = sesion.sprint.modulo.get_parent().specific
+    programa_slug = (
+        programa_page.slug if isinstance(programa_page, ProgramaPage) else ""
+    )
 
     context = {
         "form": form,
@@ -716,6 +743,31 @@ def editar_tarea(request, pk):
         if form.is_valid():
             form.save()
 
+            # Obtener el programa y las startups asociadas
+            programa_page = tarea.sesion.sprint.modulo.get_parent().specific
+
+            # Verificar que sea una instancia de ProgramaPage
+            if isinstance(programa_page, ProgramaPage):
+                integrantes = IntegranteStartup.objects.filter(
+                    startup__programa=programa_page
+                ).select_related("usuario")
+
+                # Crear notificación para cada integrante
+                for integrante in integrantes:
+                    mensaje = f"La tarea '{tarea.titulo}' en la sesión '{tarea.sesion.titulo}' ha sido actualizada."
+                    Notificacion.objects.create(
+                        usuario=integrante.usuario, tipo="Tarea", mensaje=mensaje
+                    )
+
+                # Notificar al usuario que editó la tarea
+                Notificacion.objects.create(
+                    usuario=request.user,
+                    tipo="Tarea",
+                    mensaje=f"Has editado la tarea '{tarea.titulo}' en la sesión '{tarea.sesion.titulo}'.",
+                )
+
+                messages.success(request, "Tarea actualizada exitosamente.")
+
             # Obtener la página del módulo
             modulo_page = Page.objects.get(id=tarea.sesion.sprint.modulo.id)
             return redirect(modulo_page.get_url())
@@ -727,7 +779,10 @@ def editar_tarea(request, pk):
     modulo_page_url = modulo_page.get_url()
 
     # Obtener el slug del programa
-    programa_slug = tarea.sesion.sprint.modulo.programa.slug
+    programa_page = tarea.sesion.sprint.modulo.get_parent().specific
+    programa_slug = (
+        programa_page.slug if isinstance(programa_page, ProgramaPage) else ""
+    )
 
     context = {
         "form": form,
@@ -812,6 +867,31 @@ class SubirEntregableView(View):
             entregable.startup = startup
             entregable.estado = "enviado"  # O el estado que consideres adecuado
             entregable.save()
+
+            # Obtener todos los integrantes de la startup, incluyendo al fundador
+            integrantes = list(startup.integrantes.all())
+            integrantes.append(startup.fundador)
+
+            # Crear notificaciones para todos los integrantes
+            for integrante in integrantes:
+                # No crear notificación para quien subió el entregable
+                if integrante != request.user:
+                    mensaje = (
+                        f"La startup {startup.nombre} ha entregado la tarea '{tarea.titulo}' "
+                        f"en la sesión '{tarea.sesion.titulo}' del módulo '{tarea.sesion.sprint.modulo.title}'."
+                    )
+                    Notificacion.objects.create(
+                        usuario=integrante, tipo="Entregable", mensaje=mensaje
+                    )
+
+            # Notificación para quien subió el entregable
+            Notificacion.objects.create(
+                usuario=request.user,
+                tipo="Entregable",
+                mensaje=f"Has subido exitosamente el entregable para la tarea '{tarea.titulo}'.",
+            )
+
+            messages.success(request, "Entregable subido exitosamente.")
             return redirect(modulo_page_url)
 
         context = {
@@ -889,60 +969,129 @@ class ProgramaModuloView(DetailView):
 
 # Listar objetos
 def listar_todos(request):
-    programas = ProgramaPage.objects.live()
-    usuarios = Emprendedor.objects.select_related("user").all()
-    mentores = Mentor.objects.select_related("user").all()
-    startups = Startup.objects.select_related("fundador").all()
+    search_query = request.GET.get("search", "")
+    page = request.GET.get("page", 1)
+    tab = request.GET.get(
+        "tab", "emprendedores"
+    )  # Añadimos un parámetro para la pestaña activa
 
-    # Inicializar variables para usuarios no autenticados
+    # Filtrar según la pestaña activa
+    if tab == "emprendedores":
+        usuarios = Emprendedor.objects.select_related("user").order_by("user__username")
+        if search_query:
+            usuarios = usuarios.filter(
+                Q(user__username__icontains=search_query)
+                | Q(user__apellido_paterno__icontains=search_query)
+                | Q(user__apellido_materno__icontains=search_query)
+            )
+        paginator = Paginator(usuarios, 6)
+        try:
+            usuarios_page = paginator.page(page)
+        except (PageNotAnInteger, EmptyPage):
+            usuarios_page = paginator.page(1)
+        context = {
+            "usuarios": usuarios_page,
+            "tab": tab,
+            "search_query": search_query,
+        }
+
+    elif tab == "mentores":
+        mentores = Mentor.objects.select_related("user").order_by("user__username")
+        if search_query:
+            mentores = mentores.filter(
+                Q(user__username__icontains=search_query)
+                | Q(user__apellido_paterno__icontains=search_query)
+                | Q(user__apellido_materno__icontains=search_query)
+            )
+        paginator = Paginator(mentores, 6)
+        try:
+            mentores_page = paginator.page(page)
+        except (PageNotAnInteger, EmptyPage):
+            mentores_page = paginator.page(1)
+        context = {
+            "mentores": mentores_page,
+            "tab": tab,
+            "search_query": search_query,
+        }
+
+    elif tab == "startups":
+        startups = Startup.objects.select_related("fundador").order_by("nombre")
+        if search_query:
+            startups = startups.filter(
+                Q(nombre__icontains=search_query)
+                | Q(descripcion__icontains=search_query)
+            )
+        paginator = Paginator(startups, 6)
+        try:
+            startups_page = paginator.page(page)
+        except (PageNotAnInteger, EmptyPage):
+            startups_page = paginator.page(1)
+        context = {
+            "startups": startups_page,
+            "tab": tab,
+            "search_query": search_query,
+        }
+
+    # Procesamiento adicional para usuarios autenticados
     emprendedor_profile = None
     seguidores_startup_ids = []
 
-    # Verificar si el usuario está autenticado y tiene perfil de emprendedor
     if request.user.is_authenticated and hasattr(request.user, "emprendedor_profile"):
         emprendedor_profile = request.user.emprendedor_profile
         startup_profile = emprendedor_profile.startup
 
-        # Obtener los seguidores de la startup del emprendedor
         seguidores_startup = SeguidorStartup.objects.filter(usuario=emprendedor_profile)
         seguidores_startup_ids = list(
             seguidores_startup.values_list("startup_id", flat=True)
         )
 
-        # Añadir una subconsulta para obtener el ID del seguimiento
         seguimiento_subquery = SeguidorStartup.objects.filter(
             usuario=emprendedor_profile, startup=OuterRef("pk")
         ).values("id")
 
-        # Anotar cada startup con su ID de seguimiento correspondiente
-        startups = startups.annotate(seguimiento_id=Subquery(seguimiento_subquery[:1]))
+        if tab == "startups":
+            startups_page.object_list = startups_page.object_list.annotate(
+                seguimiento_id=Subquery(seguimiento_subquery[:1])
+            )
 
-        seguidores_startup_ids = list(
-            seguidores_startup.values_list("startup_id", flat=True)
-        )
-
-        # Obtener las mentorías relacionadas con la startup del usuario
-        if startup_profile:
+        if startup_profile and tab == "mentores":
             mentorias_pendientes_subquery = Mentoria.objects.filter(
                 startup=startup_profile, mentor=OuterRef("pk"), estado="Pendiente"
             )
-            mentores = mentores.annotate(
+            mentores_page.object_list = mentores_page.object_list.annotate(
                 mentoria_pendiente_id=Subquery(
                     mentorias_pendientes_subquery.values("id")[:1]
                 ),
                 tiene_mentoria_pendiente=Exists(mentorias_pendientes_subquery),
             )
 
-    context = {
-        "programas": programas,
-        "usuarios": usuarios,
-        "mentores": mentores,
-        "startups": startups,
-        "emprendedor_profile": emprendedor_profile,
-        "seguidores_startup_ids": seguidores_startup_ids,
-        # "mentorias_ids": mentorias_ids,
-        # "mentorias": mentorias,  # Pasar las mentorías al contexto
-    }
+    context.update(
+        {
+            "emprendedor_profile": emprendedor_profile,
+            "seguidores_startup_ids": seguidores_startup_ids,
+            "search_query": search_query,
+        }
+    )
+
+    # Comprobar si es una solicitud AJAX
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        # Renderizar el contenido de la pestaña activa y devolverlo como JSON
+        if tab == "emprendedores":
+            html = render_to_string(
+                "partials/emprendedores_lista.html", context, request=request
+            )
+        elif tab == "mentores":
+            html = render_to_string(
+                "partials/mentores_lista.html", context, request=request
+            )
+        elif tab == "startups":
+            html = render_to_string(
+                "partials/startups_lista.html", context, request=request
+            )
+        else:
+            html = ""
+
+        return JsonResponse({"html": html})
 
     return render(request, "programa_startup/listar_todos.html", context)
 
@@ -950,6 +1099,10 @@ def listar_todos(request):
 @login_required
 def seguir_startup(request, startup_id):
     startup = get_object_or_404(Startup, id=startup_id)
+    emprendedor_profile = request.user.emprendedor_profile
+    if emprendedor_profile.startup and startup.id == emprendedor_profile.startup.id:
+        messages.error(request, "No puedes seguir tu propia startup.")
+        return redirect("listar-todos")
     if not SeguidorStartup.objects.filter(
         usuario=request.user.emprendedor_profile, startup=startup
     ).exists():

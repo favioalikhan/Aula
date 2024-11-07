@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     # "usuarios.apps.UsuariosConfig",
     # "usuarios.apps.CustomWagtailUsersConfig",
     "dashboard",
-    "modeltranslation",
+    # "modeltranslation",
     "unfold",
     "unfold.contrib.filters",
     "unfold.contrib.forms",
@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail",
-    "modelcluster",
+    # "modelcluster",
     "taggit",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -73,13 +73,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_cleanup.apps.CleanupConfig",
     "whitenoise.runserver_nostatic",
     # "debug_toolbar",
     "import_export",
     "guardian",
-    "simple_history",
-    "django_celery_beat",
-    "djmoney",
+    # "simple_history",
+    # "django_celery_beat",
+    # "djmoney",
     # ------
     # ------ Apps
     # "usuarios",
@@ -90,7 +91,7 @@ INSTALLED_APPS = [
 WAGTAIL_ADMIN_BASE_URL = None
 
 MIDDLEWARE = [
-    # "django.middleware.security.SecurityMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     # "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -104,7 +105,7 @@ MIDDLEWARE = [
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
     "django.middleware.locale.LocaleMiddleware",
-    "simple_history.middleware.HistoryRequestMiddleware",
+    # "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 ROOT_URLCONF = "Aula.urls"
@@ -114,7 +115,6 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.join(PROJECT_DIR, "templates"),
-            os.path.join(BASE_DIR, "dashboard/templates"),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -146,6 +146,13 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -161,6 +168,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+LOGIN_URL = "login"
 SENDGRID_API_KEY = (
     "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"
 )
@@ -185,8 +194,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATICFILES_FINDERS = [
-    "django.contrib.staticfiles.finders.FileSystemFinder",
-    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    # "django.contrib.staticfiles.finders.FileSystemFinder",  # Activar esta línea en caso de tener la advertencia:Found another file with the destination path '/path'  It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder"
+    # "Aula.custom_finders.CustomAppDirectoriesFinder",
 ]
 
 STATICFILES_DIRS = [
@@ -227,14 +237,14 @@ UNFOLD = {
     "ENVIRONMENT": "Aula.utils.environment_callback",
     "DASHBOARD_CALLBACK": "Aula.views.dashboard_callback",
     "LOGIN": {
-        "image": lambda request: static("img/incuval-admin.png"),
+        "image": lambda request: static("aula/img/incuval-admin.png"),
     },
     # "STYLES": [
     # lambda request: static("css/dist/styles.css"),
     # ],
-    "SCRIPTS": [
-        # lambda request: static("js/chart.min.js"),
-    ],
+    # "SCRIPTS": [
+    # lambda request: static("js/chart.min.js"),
+    # ],
     "TABS": [
         {
             "models": ["usuarios.CustomUser", "auth.group"],
@@ -318,6 +328,28 @@ UNFOLD = {
                 ]
             },
             {
+                "items": [
+                    {
+                        "title": _("Entregables"),
+                        "icon": "Package",
+                        "link": reverse_lazy(
+                            "aula_admin:programa_startup_tarea_changelist"
+                        ),
+                    }
+                ]
+            },
+            {
+                "items": [
+                    {
+                        "title": _("Tareas"),
+                        "icon": "Task",
+                        "link": reverse_lazy(
+                            "aula_admin:programa_startup_entregable_changelist"
+                        ),
+                    }
+                ]
+            },
+            {
                 "title": _("Gestión de contenido CMS"),
                 "collapsible": True,
                 "items": [
@@ -374,7 +406,7 @@ WAGTAILEMBEDS_RESPONSIVE_HTML = True
 WAGTAILADMIN_RECENT_EDITS_LIMIT = 5
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = "http://127.0.0.1:800"
+WAGTAILADMIN_BASE_URL = "http://127.0.0.1:8000"
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk
@@ -436,7 +468,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-
+"""
 # --------------REST FRAMEWORK----------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -447,7 +479,7 @@ REST_FRAMEWORK = {
 }
 
 # ----------------JWT-----------------UTILIZAR A FUTURO----
-"""
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=3),
     "REFRESH_TOKEN_LIFETIME": timedelta(minutes=5),
@@ -489,3 +521,34 @@ SESSION_COOKIE_HTTPONLY = True
 
 # -----------------Node-----------------------------------
 NPM_BIN_PATH = "npm.cmd"
+# -----------------Seguridad --------------------------------
+# Seguridad HTTPS y SSL
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+# SECURE_HSTS_SECONDS = 31536000  # 1 año
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SECURE_REDIRECT_EXEMPT = []
+# SECURE_REFERRER_POLICY = "no-referrer-when-downgrade"
+# SECURE_SSL_HOST = "mysecurehost.com"
+# SECURE_SSL_REDIRECT = True
+
+# Protección contra CSRF
+# CSRF_COOKIE_DOMAIN = ".mydomain.com"
+# CSRF_COOKIE_NAME = "csrftoken"
+# CSRF_COOKIE_PATH = "/"
+# CSRF_COOKIE_SAMESITE = "Strict"
+# CSRF_COOKIE_SECURE = True
+# CSRF_FAILURE_VIEW = "myapp.views.csrf_failure"
+# CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
+# CSRF_TRUSTED_ORIGINS = ["https://mydomain.com", "https://subdomain.mydomain.com"]
+# CSRF_USE_SESSIONS = True
+# CSRF_COOKIE_HTTPONLY = False
+
+# Secret Key
+# SECRET_KEY = "my-very-secure-and-secret-key"
+# SECRET_KEY_FALLBACKS = ["old-secret-key-1", "old-secret-key-2"]
+
+# Otras configuraciones de seguridad
+X_FRAME_OPTIONS = "DENY"

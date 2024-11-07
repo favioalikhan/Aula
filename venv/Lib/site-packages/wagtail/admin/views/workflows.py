@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, OuterRef, Prefetch
+from django.db.models import Count, Prefetch
 from django.db.models.functions import Lower
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -20,7 +20,10 @@ from django.views.generic import TemplateView
 
 from wagtail.admin import messages
 from wagtail.admin.auth import PermissionPolicyChecker
-from wagtail.admin.filters import MultipleContentTypeFilter, WagtailFilterSet
+from wagtail.admin.filters import (
+    MultipleContentTypeFilter,
+    WagtailFilterSet,
+)
 from wagtail.admin.forms.workflows import (
     TaskChooserSearchForm,
     WorkflowContentTypeForm,
@@ -31,13 +34,15 @@ from wagtail.admin.forms.workflows import (
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.ui.tables import BaseColumn, Column, TitleColumn
 from wagtail.admin.views.generic import CreateView, DeleteView, EditView, IndexView
+from wagtail.admin.views.generic.base import BaseListingView
+from wagtail.admin.views.generic.permissions import PermissionCheckedMixin
+from wagtail.admin.views.pages.listing import PageListingMixin
 from wagtail.coreutils import resolve_model_string
 from wagtail.models import (
     Page,
     Task,
     TaskState,
     Workflow,
-    WorkflowContentType,
     WorkflowState,
     WorkflowTask,
 )
@@ -138,7 +143,6 @@ class Index(IndexView):
     default_ordering = "name"
     search_fields = ["name"]
     filterset_class = WorkflowFilterSet
-    _show_breadcrumbs = True
     paginate_by = 20
 
     def show_disabled(self):
@@ -146,10 +150,7 @@ class Index(IndexView):
 
     def get_base_queryset(self):
         queryset = super().get_base_queryset()
-        content_types = WorkflowContentType.objects.filter(
-            workflow=OuterRef("pk")
-        ).values_list("pk", flat=True)
-        queryset = queryset.annotate(content_types=Count(content_types))
+        queryset = queryset.annotate(content_types=Count("workflow_content_types"))
         return queryset.prefetch_related(
             "workflow_pages",
             "workflow_pages__page",
@@ -259,6 +260,7 @@ class Edit(EditView):
     enable_item_label = _("Enable")
     enable_url_name = "wagtailadmin_workflows:enable"
     header_icon = "tasks"
+    header_more_buttons = []
     edit_handler = None
     MAX_PAGES = 5
     _show_breadcrumbs = True
@@ -393,24 +395,64 @@ class Disable(DeleteView):
         self.object.deactivate(user=self.request.user)
 
 
-def usage(request, pk):
-    workflow = get_object_or_404(Workflow, id=pk)
+class WorkflowUsageView(PageListingMixin, PermissionCheckedMixin, BaseListingView):
+    permission_policy = workflow_permission_policy
+    any_permission_required = {"add", "change", "delete", "view"}
+    pk_url_kwarg = "pk"
+    index_url_name = "wagtailadmin_workflows:usage"
+    index_results_url_name = "wagtailadmin_workflows:usage_results"
+    paginate_by = 20
+    header_icon = "tasks"
+    page_title = _("Usage")
 
-    editable_pages = page_permission_policy.instances_user_has_permission_for(
-        request.user, "change"
-    )
-    pages = workflow.all_pages() & editable_pages
-    paginator = Paginator(pages, per_page=10)
-    pages = paginator.get_page(request.GET.get("p"))
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
 
-    return render(
-        request,
-        "wagtailadmin/workflows/usage.html",
-        {
-            "workflow": workflow,
-            "used_by": pages,
-        },
-    )
+        # We set workflow_permission_policy as the main permission policy for this view
+        # for consistency with the other workflow views. However, since we are listing
+        # page objects in this view, we want to ensure the user has a page permission.
+        if not page_permission_policy.user_has_any_permission(
+            request.user,
+            {"add", "change", "publish", "bulk_delete", "lock", "unlock"},
+        ):
+            raise PermissionDenied
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_page_subtitle(self):
+        return self.object.name
+
+    def get_breadcrumbs_items(self):
+        title = self.get_page_title()
+        subtitle = self.get_page_subtitle()
+        return self.breadcrumbs_items + [
+            {
+                "url": reverse("wagtailadmin_workflows:index"),
+                "label": capfirst(Workflow._meta.verbose_name_plural),
+            },
+            {
+                "url": reverse("wagtailadmin_workflows:edit", args=(self.object.pk,)),
+                "label": subtitle,
+            },
+            {"url": "", "label": title, "sublabel": subtitle},
+        ]
+
+    def get_index_url(self):
+        return reverse(self.index_url_name, args=(self.object.pk,))
+
+    def get_index_results_url(self):
+        return reverse(self.index_results_url_name, args=(self.object.pk,))
+
+    def get_object(self):
+        return get_object_or_404(Workflow, id=self.kwargs.get(self.pk_url_kwarg))
+
+    def get_base_queryset(self):
+        editable_pages = page_permission_policy.instances_user_has_permission_for(
+            self.request.user, "change"
+        ).filter(depth__gt=1)
+        pages = self.object.all_pages() & editable_pages
+        pages = self.annotate_queryset(pages)
+        return pages
 
 
 @require_POST
@@ -529,7 +571,6 @@ class TaskIndex(IndexView):
     default_ordering = "name"
     search_fields = ["name"]
     filterset_class = TaskFilterSet
-    _show_breadcrumbs = True
     paginate_by = 50
 
     def show_disabled(self):
@@ -662,6 +703,7 @@ class EditTask(EditView):
     enable_item_label = _("Enable")
     enable_url_name = "wagtailadmin_workflows:enable_task"
     header_icon = "thumbtack"
+    header_more_buttons = []
     _show_breadcrumbs = True
 
     @cached_property

@@ -7,6 +7,8 @@ from django.contrib.auth.forms import (
 from .models import CustomUser, Emprendedor, Mentor, Mentoria
 from .widgets import CustomProfileImageWidget
 from django.contrib.auth import get_user_model
+from django.forms.widgets import FILE_INPUT_CONTRADICTION
+from django.core.exceptions import ValidationError
 
 
 class CustomUserSettingsForm(forms.ModelForm):
@@ -307,6 +309,58 @@ class CustomUserChangeForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_profile_image(self):
+        image = self.cleaned_data.get("foto_perfil", False)
+        if image:
+            if image.size > 10 * 1024 * 1024:
+                raise forms.ValidationError("La imagen de perfil excede los 10MB.")
+            if image.content_type not in [
+                "image/png",
+                "image/jpeg",
+                "image/svg+xml",
+                "image/x-xbitmap",
+                "image/tiff",
+                "image/vnd.microsoft.icon",
+                "image/x-icon",
+                "image/gif",
+                "image/webp",
+                "image/apng",
+                "image/pjpeg",
+                "image/avif",
+                "image/bmp",
+                "image/jfif",
+                "image/pjp",
+            ]:
+                raise forms.ValidationError(
+                    "Tipo de archivo no soportado para la imagen de perfil."
+                )
+        return image
+
+    def clean_foto_perfil(self):
+        foto_perfil = self.cleaned_data.get("foto_perfil")
+        if foto_perfil == FILE_INPUT_CONTRADICTION:
+            raise ValidationError(
+                "No puedes subir una nueva imagen y eliminar la existente al mismo tiempo."
+            )
+        elif foto_perfil is False:
+            # Usuario ha marcado el checkbox de eliminación
+            return False
+        elif not foto_perfil:
+            # No se subió un nuevo archivo y no se marcó el checkbox
+            return self.instance.foto_perfil
+        else:
+            # Se subió un nuevo archivo
+            return foto_perfil
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data.get("foto_perfil") is False:
+            # Establecer foto_perfil en None para eliminarla
+            user.foto_perfil = None
+        if commit:
+            user.save()
+        return user
 
 
 class EmprendedorForm(forms.ModelForm):

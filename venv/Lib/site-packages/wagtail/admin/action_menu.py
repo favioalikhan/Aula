@@ -196,7 +196,6 @@ class UnpublishMenuItem(ActionMenuItem):
     label = _("Unpublish")
     name = "action-unpublish"
     icon_name = "download"
-    classname = "action-secondary"
 
     def is_shown(self, context):
         if context["view"] == "edit":
@@ -238,7 +237,7 @@ BASE_PAGE_ACTION_MENU_ITEMS = None
 def _get_base_page_action_menu_items():
     """
     Retrieve the global list of menu items for the page action menu,
-    which may then be customised on a per-request basis
+    which may then be customized on a per-request basis
     """
     global BASE_PAGE_ACTION_MENU_ITEMS
 
@@ -318,6 +317,9 @@ class PageActionMenu:
             self.default_item = None
 
     def render_html(self):
+        if not self.default_item:
+            return ""
+
         rendered_menu_items = [
             menu_item.render_html(self.context) for menu_item in self.menu_items
         ]
@@ -336,7 +338,7 @@ class PageActionMenu:
 
     @cached_property
     def media(self):
-        media = Media()
+        media = self.default_item.media if self.default_item else Media()
         for item in self.menu_items:
             media += item.media
         return media

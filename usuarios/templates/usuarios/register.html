@@ -105,7 +105,7 @@
               </label>
               <label class="text-sm font-roboto text-gray-700 cursor-pointer select-none mt-1 mr-2 " htmlFor="remember"> 
                 <p class="text-md text-navy-blue">
-                  Al registrarse, está creando una cuenta en la plataforma y acepta los<a href="#" class="font-medium transition-colors hover:text-navy-blue">
+                  Al registrarse, está creando una cuenta en la plataforma y acepta los<a href="{% url 'terminos_condiciones' %}" target="_blank" class="font-medium transition-colors hover:text-navy-blue">
                     &nbsp;Términos y Condiciones
                   </a>
                 </p>
@@ -129,14 +129,14 @@
             </div>
           </div>
       </form>
+      <a href="{% url 'login' %}" class="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-purple-600 hover:underline">Si tienes cuenta, inicia sesión</a>
     </div>
   </div>
   <div class="hidden md:block md:w-1/2 bg-gray-200">
-    <img class="object-cover w-full h-full" src="{% static 'img/cover-incuval.png' %}" alt="Incuval">
+    <img class="object-cover w-full h-full" src="{% static 'aula/img/Cover-incuval.png' %}" alt="Incuval">
   </div>
 </div>
 
-<!-- Modal para registro exitoso -->
 <!-- Modal para registro exitoso -->
 <div id="successModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
   <div class="flex items-center justify-center min-h-screen px-4 py-6">
@@ -173,6 +173,7 @@
   </div>
 </div>
 
-<script src="{% static 'js/modales.js' %}"></script>
-
-  {% endblock content %}
+{% endblock content %}
+{% block extra_js %}
+  <script src="{% static 'aula/js/modales.js' %}"></script>
+{% endblock %}

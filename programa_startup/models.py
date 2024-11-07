@@ -20,6 +20,8 @@ from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
+from django.core.exceptions import ValidationError
+from PIL import Image
 
 # wagtail_admin-------------------------------------------------------------------------------
 
@@ -306,6 +308,13 @@ class Startup(models.Model):
                 self.activo = False
 
         super().save(*args, **kwargs)  # Guardar la instancia
+        # Optimizar la imagen de startup
+        if self.logo:
+            img = Image.open(self.logo.path)
+            if img.height > 800 or img.width > 800:
+                output_size = (800, 800)
+                img.thumbnail(output_size)
+                img.save(self.logo.path)
 
     class Meta:
         verbose_name = "startup"
@@ -335,6 +344,34 @@ class Modulo(Page):
         FieldPanel("imagen"),
         InlinePanel("sprints", label="Sprints"),
     ]
+
+    def get_context(self, request):
+        context = super().get_context(request)
+        sprints = self.sprints.all()
+        now = timezone.now()
+
+        for sprint in sprints:
+            for sesion in sprint.sesiones.all():
+                for tarea in sesion.tareas.all():
+                    # Check if the user has an existing entregable for this task
+                    entregable_existente = tarea.entregables.filter(
+                        subido_por=request.user
+                    ).first()
+
+                    # Determine if the user can upload a new entregable
+                    tarea.can_upload = (
+                        tarea.fecha_entrega is not None
+                        and now <= tarea.fecha_entrega
+                        and entregable_existente is None
+                    )
+
+                    # Pass the existing entregable and upload permission status to the template
+                    tarea.user_entregable = entregable_existente
+                    tarea.can_upload = tarea.can_upload
+
+        # Add sprints to the context with the updated task data
+        context["sprints"] = sprints
+        return context
 
     @property
     def programa_id(self):
@@ -398,8 +435,16 @@ class Sesion(ClusterableModel):
 
 class Tarea(models.Model):
     TIPO_CHOICES = [
-        ("tarea", "Tarea"),
-        ("recurso", "Recurso"),
+        # Entregables de negocio
+        ("modelo_negocio", "Modelo de Negocio"),
+        ("plan_financiero", "Plan Financiero"),
+        ("investigacion_mercado", "Investigación de Mercado"),
+        ("pitch", "Pitch Deck"),
+        # Recursos de apoyo
+        ("guia", "Guía"),
+        ("material", "Material de Apoyo"),
+        # Tipos derivados de sesiones
+        ("material_adicional", "Material Adicional"),
     ]
 
     BLOQUEADO_CHOICES = [
@@ -411,44 +456,70 @@ class Tarea(models.Model):
         "Sesion", on_delete=models.CASCADE, related_name="tareas"
     )
     titulo = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True, null=True)
-    fecha_entrega = models.DateTimeField(blank=True, null=True)
+    descripcion = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Describe claramente qué debe entregar el emprendedor",
+    )
+    fecha_entrega = models.DateTimeField(
+        blank=True, null=True, help_text="Solo necesario para entregables"
+    )
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     archivo = models.FileField(upload_to="tareas/", blank=True, null=True)
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default="tarea")
+    tipo = models.CharField(
+        max_length=50,
+        choices=TIPO_CHOICES,
+        default="Material de Apoyo",
+        blank=True,
+        help_text="Selecciona el tipo de entregable o recurso. Si está en blanco, se derivará del tipo de la sesión.",
+    )
     bloqueado = models.CharField(max_length=2, choices=BLOQUEADO_CHOICES, default="no")
 
     def __str__(self):
         return self.titulo
 
+    def is_entregable(self):
+        """Determina si es un entregable que requiere acción del emprendedor"""
+        return self.tipo in [
+            "modelo_negocio",
+            "plan_financiero",
+            "investigacion_mercado",
+            "pitch",
+        ]
+
+    def clean(self):
+        if self.is_entregable() and not self.fecha_entrega:
+            raise ValidationError("Los entregables requieren fecha de entrega")
+
     def save(self, *args, **kwargs):
-        # Si es un recurso, no necesita fecha de entrega ni descripción
-        if self.tipo == "recurso":
-            self.fecha_entrega = None
-            self.descripcion = None
+        # Si 'tipo' no está definido, lo derivamos del tipo de la sesión
+        if not self.tipo and self.sesion.tipo:
+            # Mapeamos el tipo de sesión al tipo de tarea correspondiente
+            sesion_tipo_mapping = {
+                "video": "material",  # Por ejemplo, tareas de sesiones de video son de tipo 'material'
+                "lectura": "guia",
+                "ejercicio": "material",
+                "material": "material_adicional",  # Puedes ajustar según tus necesidades
+            }
+            # Obtén el tipo derivado; si no hay mapeo, usa 'material' por defecto
+            self.tipo = sesion_tipo_mapping.get(self.sesion.tipo, "material")
+
+        self.clean()
         super().save(*args, **kwargs)
-        self.notificar_integrantes_startup()
 
-    def notificar_integrantes_startup(self):
-
-        # Notificar a los integrantes de la startup sobre la nueva tarea
-        programa = self.sesion.sprint.modulo.programa
-        # startups = Startup.objects.filter(programa=self.sesion.sprint.modulo.programa)
-        integrantes = IntegranteStartup.objects.filter(startup__programas=programa)
-        # for startup in startups:
-        #    for integrante in startup.integrantes.all():
-        #        mensaje = f"Se ha asignado la tarea '{self.titulo}' en la sesión '{self.sesion.titulo}' del programa '{self.sesion.sprint.modulo.programa.titulo}'."
-        #        Notificacion.objects.create(
-        #            usuario=integrante,
-        #            tipo='Tarea',
-        #            mensaje=mensaje
-        #        )
-        # Crear la notificación para cada integrante
-        for integrante in integrantes:
-            mensaje = f"Nueva tarea asignada: {self.titulo} en la sesión {self.sesion.titulo}."
-            Notificacion.objects.create(
-                usuario=integrante.usuario, tipo="Tarea", mensaje=mensaje
-            )
+    @property
+    def tipo_display_dinamico(self):
+        """
+        Devuelve la representación legible del tipo de tarea.
+        Si 'tipo' está definido, usa get_tipo_display().
+        Si no, deriva del tipo de la sesión.
+        """
+        if self.tipo:
+            return self.get_tipo_display()
+        else:
+            # Derivamos del tipo de la sesión
+            sesion_tipo_display = self.sesion.get_tipo_display()
+            return sesion_tipo_display
 
     class Meta:
         verbose_name = "tarea"
@@ -488,12 +559,6 @@ class Entregable(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Notificar a los demás integrantes sobre el nuevo entregable
-        for integrante in self.startup.integrantes.exclude(id=self.subido_por.id):
-            mensaje = f"{self.subido_por.username} ha subido un entregable para la tarea '{self.tarea.titulo}' de la startup '{self.startup.nombre}'."
-            Notificacion.objects.create(
-                usuario=integrante, tipo="Entregable", mensaje=mensaje
-            )
 
 
 class Evento(Page):
