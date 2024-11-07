@@ -1,0 +1,47 @@
+# Archivos de Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.db
+*.sqlite3
+
+# Archivos de entornos virtuales
+venv/
+env/
+.venv/
+.env/
+
+# Archivos de dependencias
+*.egg-info/
+*.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Archivos de configuración del entorno
+*.env
+*.env.*
+
+# Archivos de caché de Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+db.sqlite3
+
+# Archivos de migraciones
+migrations/
+
+# Archivos generados por IDEs
+.idea/
+.vscode/
+*.swp
+
+# Archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de backup
+*~
