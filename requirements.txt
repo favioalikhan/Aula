@@ -6,6 +6,9 @@ django-tailwind
 sendgrid
 django-import-export
 django-cleanup
-whitenoise
+whitenoise[brotli]
 django-guardian
 argon2-cffi
+psycopg2-binary
+dj-database-url
+gunicorn
