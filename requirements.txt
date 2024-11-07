@@ -11,4 +11,4 @@ django-guardian
 argon2-cffi
 psycopg2-binary
 dj-database-url
-uvicorn[gunicorn]
+gunicorn
