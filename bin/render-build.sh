@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Exit immediately if a command exits with a non-zero status
+# Salir inmediatamente si un comando falla
 set -o errexit
 
 # Instalar las dependencias
 pip install --upgrade pip
 pip install -r requirements.txt
 
-#poetry install
+# Si usas Poetry, descomenta la siguiente línea y comenta las líneas de pip
+# poetry install
+
 # Aplicar migraciones de la base de datos
-python manage.py makemigrations
 python manage.py migrate
 
 # Recopilar archivos estáticos
