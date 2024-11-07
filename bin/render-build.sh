@@ -7,6 +7,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # Aplicar migraciones de la base de datos
+python manage.py makemigrations
 python manage.py migrate
 
 # Recopilar archivos estáticos
