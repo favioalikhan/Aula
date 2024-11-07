@@ -142,11 +142,19 @@ DATABASES = {
     #    "ENGINE": "django.db.backends.sqlite3",
     #   "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     # }
-    'default': dj_database_url.config(
+    #'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600
-    )
+    #    default=os.getenv('DATABASE_URL'),
+    #    conn_max_age=600
+    #)
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'aula',
+        'USER': 'postgres',
+        'PASSWORD': '9870',
+        'HOST': 'localhost',  # o la dirección de tu servidor PostgreSQL
+        'PORT': '5432',       # el puerto de PostgreSQL, por defecto es 5432
+    }
 }
 
 

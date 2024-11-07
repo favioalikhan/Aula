@@ -1,8 +1,8 @@
 # Archivos de Python
-*.pyc
+
 *.pyo
 *.pyd
-__pycache__/
+
 *.db
 *.sqlite3
 
@@ -25,14 +25,12 @@ pip-delete-this-directory.txt
 # Archivos de caché de Django
 *.log
 *.pot
-*.pyc
+
 *.pyo
 *.pyd
-__pycache__/
 db.sqlite3
 
 # Archivos de migraciones
-migrations/
 
 # Archivos generados por IDEs
 .idea/
