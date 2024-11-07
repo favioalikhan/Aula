@@ -12,3 +12,6 @@ argon2-cffi
 psycopg2-binary
 dj-database-url
 gunicorn
+django-money
+django-simple-history
+django-celery-beat

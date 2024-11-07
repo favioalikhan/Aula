@@ -80,9 +80,9 @@ INSTALLED_APPS = [
     # "debug_toolbar",
     "import_export",
     "guardian",
-    # "simple_history",
-    # "django_celery_beat",
-    # "djmoney",
+    "simple_history",
+    "django_celery_beat",
+    "djmoney",
     # ------
     # ------ Apps
     # "usuarios",
