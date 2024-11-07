@@ -32,7 +32,7 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 INSTALLED_APPS = [
     # extra
-    "usuarios",
+    #"usuarios",
     # "usuarios.apps.UsuariosConfig",
     # "usuarios.apps.CustomWagtailUsersConfig",
     "dashboard",
@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.redirects",
     "wagtail.embeds",
     "wagtail.sites",
-    # "wagtail.users",
+    "wagtail.users",
     # "usuarios.apps.CustomWagtailUsersConfig",
     "wagtail.snippets",
     "wagtail.documents",
@@ -85,7 +85,7 @@ INSTALLED_APPS = [
     "djmoney",
     # ------
     # ------ Apps
-    # "usuarios",
+    "usuarios",
     "Aula",
     "base",
     "programa_startup",

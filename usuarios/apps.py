@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from wagtail.users.apps import WagtailUsersAppConfig
+#from wagtail.users.apps import WagtailUsersAppConfig
 
 
 class UsuariosConfig(AppConfig):
@@ -7,7 +7,7 @@ class UsuariosConfig(AppConfig):
     name = "usuarios"
 
 
-class CustomWagtailUsersConfig(WagtailUsersAppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "wagtail.users"
-    user_viewset = "usuarios.viewsets.CustomUserViewSet"
+#class CustomWagtailUsersConfig(WagtailUsersAppConfig):
+#    default_auto_field = "django.db.models.BigAutoField"
+#    name = "wagtail.users"
+#    user_viewset = "usuarios.viewsets.CustomUserViewSet"
