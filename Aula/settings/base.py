@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import dj_database_url
+SECRET_KEY = os.environ.get('SECRET_KEY', default='rnd_0gLkWCpcbozmlRvy7XUHLQt0OybX')
 
 # from datetime import timedelta
 from django.templatetags.static import static
@@ -141,10 +142,10 @@ DATABASES = {
     #    "ENGINE": "django.db.backends.sqlite3",
     #   "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     # }
-    "default": dj_database_url.config(
+    'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default="postgresql://postgres:postgres@localhost:5432/mysite",
-        conn_max_age=600,
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600
     )
 }
 
@@ -174,7 +175,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = []
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    
 LOGIN_URL = "login"
 SENDGRID_API_KEY = (
     "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"
@@ -212,6 +217,8 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
+
+DEBUG = 'RENDER' not in os.environ
 
 if not DEBUG:
     # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
